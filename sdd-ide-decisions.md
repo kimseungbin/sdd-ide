@@ -532,6 +532,44 @@ API" — brittle, drift-prone, and opaque.
 
 ---
 
+## 2c. Decisions Locked (session 2 — implementation stack)
+
+_Made while starting the build. These are stack/tooling choices, not product-architecture;
+recorded here so the rationale is durable rather than buried in commit messages._
+
+### D25 — Renderer UI framework: React
+- **Chosen over Svelte (and Vue).** Decided on three project-specific factors, not raw popularity:
+  (1) this is an **LLM-built** codebase (Claude Code now, agents as the product later) and models
+  are markedly more reliable at React; (2) the editor decision (D18) is React-leaning —
+  Slate/Plate and BlockNote are React, so React keeps the D18 options open; (3) the UI rules
+  (see CLAUDE.md) depend on React-first headless/variant libs (Radix, React Aria, CVA).
+- **Svelte's main edge (bundle size) is moot in Electron** (desktop, not re-downloaded per visit);
+  its higher satisfaction is partly self-selection. Wired into the renderer via
+  `@vitejs/plugin-react` (pinned Vite 7 — electron-vite@5 peer ceiling).
+
+### D26 — Styling engine: Tailwind v4 (+ CVA on Radix)
+- **Chosen over Panda CSS and CSS Modules.** Tailwind for max LLM fluency (the shadcn pattern)
+  and best support while SeungBin is newer to the layer; Panda was the principled runner-up
+  (typed tokens/recipes) but more niche. Tokens live in Tailwind `@theme`; components expose a
+  **closed variant API** via CVA, with `className`/`style` omitted from public props (UI Rule 2).
+- Enforcing "tokens only" (Rule 4 — ban arbitrary values) has **no clean Tailwind-v4-compatible
+  lint rule yet** → deferred (DD-6).
+
+### D27 — Component workshop: Ladle
+- **Chosen over Storybook.** Lighter, Vite-native, faster startup, Storybook-compatible story
+  format — enough to realize UI Rule 7 (each component documents its prop vocabulary via a
+  controls Playground) without Storybook's weight. Components render in a plain browser (not
+  Electron), which reinforces keeping presentational components decoupled from the preload
+  bridge (UI Rule 6).
+
+### D28 — Linting: Oxlint primary + ESLint for the gaps
+- **Two-linter setup.** Oxlint is the fast primary; ESLint runs *only* the rules Oxlint can't
+  express. Concretely: Oxlint **does not implement `no-restricted-syntax`** (verified), which
+  UI Rule 3 needs (ban raw `<button>` outside `components/Button/`), so that rule lives in a
+  narrowly-scoped `eslint.config.mjs`. `npm run lint` = `oxlint && eslint .`.
+
+---
+
 ## 3. Open Questions (not yet decided)
 
 - **O1 — [LEANING → D14]** Committed text = hybrid (human markdown + embedded stable ID

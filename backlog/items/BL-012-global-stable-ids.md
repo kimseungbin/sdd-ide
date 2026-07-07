@@ -1,7 +1,7 @@
 ---
 id: BL-012
 title: Global stable ID scheme
-status: backlog
+status: in-progress
 type: feature
 priority: high
 milestone: M1
@@ -19,12 +19,15 @@ convention inside `- [ ]` lines.
 
 ## Acceptance criteria
 
-- [ ] Every node carries a globally unique, stable ID at creation
+- [x] Every node carries a globally unique, stable ID at creation (`src/engine/ids.ts`:
+      `createNodeId`/`createEdgeId` — minimal UUID-based scheme)
 - [ ] IDs survive move/reorder/rename and round-trip through the projection ([[BL-020]])
-- [ ] IDs are the anchor for dependency edges ([[BL-013]]) and PR traceability ([[BL-062]])
+- [x] IDs are the anchor for dependency edges ([[BL-013]]) — done; PR traceability ([[BL-062]]) later
 
 ## Notes / open questions
 
+- Minimal generator implemented alongside the engine. Remaining work is the
+  **projection-embeddable** anchor form (D14) — unblocked once [[BL-020]] starts.
 - ID must be embeddable unobtrusively in the hybrid markdown projection (D14, [[BL-020]]).
 
 ## Deferred decisions

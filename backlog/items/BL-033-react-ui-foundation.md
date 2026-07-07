@@ -44,3 +44,5 @@ UI rules into actual scaffolding.
 
 - DD-4: Production CSP hardening (drop dev `'unsafe-inline'`, set via main-process session
   headers) — soft, revisit before first release.
+- DD-6: Tokens-only lint (Rule 4) — ban arbitrary Tailwind values (`bg-[#fff]`). Soft; no
+  clean Tailwind-v4-compatible rule yet, enforced by review until one lands.

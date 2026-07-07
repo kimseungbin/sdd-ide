@@ -46,8 +46,9 @@ _Resolve the open questions that gate architecture choices before committing._
 
 | ID | Title | type | prio | status | decisions |
 |----|-------|------|------|--------|-----------|
-| [BL-001](./items/BL-001-electron-shell-scaffold.md) | Electron app shell scaffold | infra | high | in-review | D21 |
+| [BL-001](./items/BL-001-electron-shell-scaffold.md) | Electron app shell scaffold | infra | high | done | D21 |
 | [BL-002](./items/BL-002-block-editor-spike.md) | Block editor spike: Slate/Plate vs Tiptap | spike | critical | backlog | D18 |
+| [BL-003](./items/BL-003-dev-ci-pipeline.md) | Dev CI pipeline (GitHub Actions) | infra | medium | backlog | — |
 
 ### M1 — Spec engine core (the load-bearing layer)
 _Typed store + single validated mutation path. Nothing else is real without this._
@@ -56,7 +57,7 @@ _Typed store + single validated mutation path. Nothing else is real without this
 |----|-------|------|------|--------|-----------|
 | [BL-010](./items/BL-010-typed-block-tree.md) | Typed block-tree data model | feature | critical | done | D1, D5 |
 | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | Spec engine: validated mutation API | feature | critical | done | D2 |
-| [BL-012](./items/BL-012-global-stable-ids.md) | Global stable ID scheme | feature | high | backlog | D5, D13 |
+| [BL-012](./items/BL-012-global-stable-ids.md) | Global stable ID scheme | feature | high | in-progress | D5, D13 |
 | [BL-013](./items/BL-013-dependency-graph-model.md) | Dependency graph + edge taxonomy | feature | high | done | D5, D9 |
 | [BL-014](./items/BL-014-write-time-cycle-checks.md) | Write-time cycle checks | feature | medium | done | D24 |
 | [BL-015](./items/BL-015-triad-templates-in-store.md) | Default triad + editable templates in store | feature | medium | backlog | D17 |
@@ -130,6 +131,7 @@ unless promoted to a hard edge on a specific item.
 | DD-3 | PM participation model (async web surface vs. stays PR-comments-only) | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | soft | post-v1, once dev-centric core ships (D20) |
 | DD-4 | Production CSP hardening (drop dev `'unsafe-inline'`, set via main-process headers) | [BL-033](./items/BL-033-react-ui-foundation.md) | soft | before first release |
 | DD-5 | Engine runtime placement (main+IPC vs. in-renderer) | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | soft | when persistence lands (BL-022) |
+| DD-6 | Tokens-only lint (ban arbitrary Tailwind values, Rule 4) | [BL-033](./items/BL-033-react-ui-foundation.md) | soft | when a Tailwind-v4-compatible rule exists |
 
 ---
 

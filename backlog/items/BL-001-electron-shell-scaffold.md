@@ -1,7 +1,7 @@
 ---
 id: BL-001
 title: Electron app shell scaffold
-status: in-review
+status: done
 type: infra
 priority: high
 milestone: M0
