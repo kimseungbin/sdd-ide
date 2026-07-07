@@ -10,6 +10,7 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "jsx": "react-jsx",
     "noEmit": true,
     "types": ["node", "electron-vite/node"],
     "lib": ["ESNext", "DOM", "DOM.Iterable"]

@@ -1,9 +1,12 @@
 import { defineConfig } from 'electron-vite'
+import react from '@vitejs/plugin-react'
 
 // electron-vite builds each process separately into out/{main,preload,renderer}.
-// Defaults are intentionally bare here — the shell (BL-001) adds no plugins yet.
+// Only the renderer runs React; main/preload are plain Node.
 export default defineConfig({
   main: {},
   preload: {},
-  renderer: {},
+  renderer: {
+    plugins: [react()],
+  },
 })

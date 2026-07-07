@@ -75,6 +75,7 @@ _Adopt an editor via adapter; its doc model is a projection of the store._
 
 | ID | Title | type | prio | status | decisions |
 |----|-------|------|------|--------|-----------|
+| [BL-033](./items/BL-033-react-ui-foundation.md) | React UI foundation & component system | feature | high | in-progress | D18, D21 |
 | [BL-030](./items/BL-030-editor-adapter.md) | Editor adapter: doc model as store projection | feature | high | backlog | D18, D2 |
 | [BL-031](./items/BL-031-containment-editing-ux.md) | Containment editing UX (nesting, drag-drop) | feature | medium | backlog | D5 |
 | [BL-032](./items/BL-032-custom-block-types.md) | Custom block types incl. deferred-decision node | feature | medium | backlog | D6, D17 |
@@ -126,6 +127,7 @@ unless promoted to a hard edge on a specific item.
 | DD-1 | Fan-in = direct in-degree vs. transitive descendant weight? (O17) | [BL-041](./items/BL-041-importance-model.md) | soft | real graph data shows direct in-degree misses true keystones |
 | DD-2 | Final block-editor pick (Slate/Plate vs. Tiptap) | [BL-002](./items/BL-002-block-editor-spike.md) | hard → M3 | spike results in |
 | DD-3 | PM participation model (async web surface vs. stays PR-comments-only) | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | soft | post-v1, once dev-centric core ships (D20) |
+| DD-4 | Production CSP hardening (drop dev `'unsafe-inline'`, set via main-process headers) | [BL-033](./items/BL-033-react-ui-foundation.md) | soft | before first release |
 
 ---
 

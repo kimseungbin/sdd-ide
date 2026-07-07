@@ -3,14 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Dev-relaxed CSP: 'unsafe-inline' is needed for Vite/React Fast Refresh in dev.
+      TODO (security hardening, later): tighten for production and set via the main
+      process session response headers instead of a meta tag.
+    -->
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws:"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' ws:"
     />
     <title>SDD IDE</title>
   </head>
   <body>
-    <main id="app"></main>
-    <script type="module" src="./src/renderer.ts"></script>
+    <div id="app"></div>
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
