@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+
+# Node / Electron (M0 onward — D21)
+node_modules/
+dist/
+out/
+build/
+*.log
+.env
+.env.local
+
+# Editor / IDE
+.idea/
+*.swp
