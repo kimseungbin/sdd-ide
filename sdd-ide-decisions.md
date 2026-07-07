@@ -640,4 +640,6 @@ recorded here so the rationale is durable rather than buried in commit messages.
 
 ---
 
-_Last updated: brainstorm session 1 (+ D23 edge authoring/fan-in, D24 cycles + permission gating; O9/O12/O12b/O14/O17 resolved). All major loose ends closed. Remaining: O1 leaning→D14 (settled in practice). Next: consolidated architecture overview._
+_Last updated: session 2 (build start) — added implementation-stack decisions D25–D28
+(React, Tailwind v4, Ladle, Oxlint+ESLint). Session-1 product decisions D1–D24 unchanged.
+Build progress is tracked in [`backlog/`](./backlog/README.md)._

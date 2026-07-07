@@ -133,6 +133,7 @@ unless promoted to a hard edge on a specific item.
 | DD-4 | Production CSP hardening (drop dev `'unsafe-inline'`, set via main-process headers) | [BL-033](./items/BL-033-react-ui-foundation.md) | soft | before first release |
 | DD-5 | Engine runtime placement (main+IPC vs. in-renderer) | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | soft | when persistence lands (BL-022) |
 | DD-6 | Tokens-only lint (ban arbitrary Tailwind values, Rule 4) | [BL-033](./items/BL-033-react-ui-foundation.md) | soft | when a Tailwind-v4-compatible rule exists |
+| DD-7 | Monorepo layout + Vite+ as task runner (if project splits into app/engine/mcp-adapter packages) | [BL-050](./items/BL-050-mcp-adapter.md) | soft | when a 2nd package appears |
 
 ---
 
