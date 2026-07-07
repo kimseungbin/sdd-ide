@@ -61,6 +61,7 @@ _Typed store + single validated mutation path. Nothing else is real without this
 | [BL-013](./items/BL-013-dependency-graph-model.md) | Dependency graph + edge taxonomy | feature | high | done | D5, D9 |
 | [BL-014](./items/BL-014-write-time-cycle-checks.md) | Write-time cycle checks | feature | medium | done | D24 |
 | [BL-015](./items/BL-015-triad-templates-in-store.md) | Default triad + editable templates in store | feature | medium | backlog | D17 |
+| [BL-016](./items/BL-016-wire-engine-into-app.md) | Wire spec engine into the app (Caller A) | feature | high | backlog | D2 |
 
 ### M2 — Projection & Git durability
 _Committed markdown = the durable record; store rehydrates from it (D1 amended)._
