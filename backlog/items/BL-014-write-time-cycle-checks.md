@@ -1,7 +1,7 @@
 ---
 id: BL-014
 title: Write-time cycle checks
-status: backlog
+status: done
 type: feature
 priority: medium
 milestone: M1
@@ -19,9 +19,11 @@ cycles are harmless and allowed.
 
 ## Acceptance criteria
 
-- [ ] Adding a hard edge that would form a cycle is rejected at write-time with a clear error
-- [ ] Soft-edge cycles are permitted
-- [ ] "Resolve later" is expressed as a deferred-decision node ([[BL-042]]), not a tolerated cycle
+- [x] Adding a hard edge that would form a cycle is rejected at write-time (`SpecEngineError`
+      code `CYCLE`); verified by test
+- [x] Soft-edge cycles are permitted (verified by test)
+- [ ] "Resolve later" is expressed as a deferred-decision node ([[BL-042]]), not a tolerated
+      cycle — convention; realized once [[BL-042]] lands
 
 ## Notes / open questions
 

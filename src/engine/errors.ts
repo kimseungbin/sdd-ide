@@ -4,6 +4,9 @@ export type SpecEngineErrorCode =
   | 'INVALID_TYPE'
   | 'INVALID_PATCH'
   | 'CYCLE'
+  | 'EDGE_NOT_FOUND'
+  | 'DUPLICATE_EDGE'
+  | 'SELF_EDGE'
 
 export class SpecEngineError extends Error {
   readonly code: SpecEngineErrorCode

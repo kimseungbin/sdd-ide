@@ -7,10 +7,15 @@
  *    physically cannot mutate the store off-path.
  *  - Containment is acyclic: a node can never be moved into its own subtree.
  */
+import { isHardEdge } from './edges'
 import { SpecEngineError } from './errors'
-import { createNodeId } from './ids'
+import { createEdgeId, createNodeId } from './ids'
 import type {
+  AddEdgeInput,
   CreateNodeInput,
+  Edge,
+  EdgeId,
+  EdgeType,
   Node,
   NodeId,
   NodePatch,
@@ -31,6 +36,17 @@ export interface SpecEngine {
   updateNode(id: NodeId, patch: NodePatch): Node
   moveNode(id: NodeId, newParentId: NodeId | null, index?: number): void
   deleteNode(id: NodeId): void
+
+  // --- dependency graph (D5/D9): a separate relation, same single write path (D2) ---
+  addEdge(input: AddEdgeInput): Edge
+  removeEdge(id: EdgeId): void
+  getEdges(): Edge[]
+  getOutgoingEdges(id: NodeId): Edge[]
+  getIncomingEdges(id: NodeId): Edge[]
+  /** Direct in-degree (fan-in), optionally by type. Soft/derived signal (D23/O17). */
+  getInDegree(id: NodeId, type?: EdgeType): number
+  /** Node ids reachable from `id` following hard edges (D12 importance floor). */
+  getHardReachable(id: NodeId): NodeId[]
 
   // --- reactivity (Rule 6: UI derives from the store) ---
   subscribe(listener: () => void): () => void
@@ -72,14 +88,20 @@ function insertAt(arr: NodeId[], id: NodeId, index?: number): void {
   else arr.splice(index, 0, id)
 }
 
+function cloneEdge(edge: Edge): Edge {
+  return { ...edge }
+}
+
 export function createSpecEngine(snapshot?: SpecSnapshot): SpecEngine {
   const nodes = new Map<NodeId, Node>()
   const rootIds: NodeId[] = []
+  const edges = new Map<EdgeId, Edge>()
   const listeners = new Set<() => void>()
 
   if (snapshot) {
     for (const n of snapshot.nodes) nodes.set(n.id, clone(n))
     rootIds.push(...snapshot.rootIds)
+    for (const e of snapshot.edges) edges.set(e.id, cloneEdge(e))
   }
 
   const notify = (): void => {
@@ -112,6 +134,20 @@ export function createSpecEngine(snapshot?: SpecSnapshot): SpecEngine {
     return out
   }
 
+  /** Node ids reachable from `start` following outgoing hard edges (excludes `start`). */
+  const hardReachableFrom = (start: NodeId): Set<NodeId> => {
+    const seen = new Set<NodeId>()
+    const stack: NodeId[] = []
+    for (const e of edges.values()) if (e.from === start && isHardEdge(e.type)) stack.push(e.to)
+    while (stack.length > 0) {
+      const cur = stack.pop() as NodeId
+      if (seen.has(cur)) continue
+      seen.add(cur)
+      for (const e of edges.values()) if (e.from === cur && isHardEdge(e.type)) stack.push(e.to)
+    }
+    return seen
+  }
+
   return {
     getNode(id) {
       const node = nodes.get(id)
@@ -135,6 +171,7 @@ export function createSpecEngine(snapshot?: SpecSnapshot): SpecEngine {
         version: 1,
         rootIds: [...rootIds],
         nodes: [...nodes.values()].map(clone),
+        edges: [...edges.values()].map(cloneEdge),
       }
     },
 
@@ -185,10 +222,68 @@ export function createSpecEngine(snapshot?: SpecSnapshot): SpecEngine {
 
     deleteNode(id) {
       const node = getLive(id)
-      const ids = collectSubtree(id)
+      const ids = new Set(collectSubtree(id))
       detach(node)
       for (const nid of ids) nodes.delete(nid)
+      // Prune dangling edges touching any deleted node.
+      for (const [eid, e] of edges) {
+        if (ids.has(e.from) || ids.has(e.to)) edges.delete(eid)
+      }
       notify()
+    },
+
+    addEdge({ from, to, type }) {
+      getLive(from) // both endpoints must exist
+      getLive(to)
+      if (from === to) {
+        throw new SpecEngineError('SELF_EDGE', 'An edge cannot connect a node to itself')
+      }
+      for (const e of edges.values()) {
+        if (e.from === from && e.to === to && e.type === type) {
+          throw new SpecEngineError('DUPLICATE_EDGE', `A ${type} edge from "${from}" to "${to}" already exists`)
+        }
+      }
+      // Hard-edge cycles are deadlocks — reject at write time (BL-014/D24). Soft cycles are allowed.
+      if (isHardEdge(type) && (to === from || hardReachableFrom(to).has(from))) {
+        throw new SpecEngineError('CYCLE', `A ${type} edge from "${from}" to "${to}" would create a hard-dependency cycle`)
+      }
+      const edge: Edge = { id: createEdgeId(type), from, to, type }
+      edges.set(edge.id, edge)
+      notify()
+      return cloneEdge(edge)
+    },
+
+    removeEdge(id) {
+      if (!edges.has(id)) {
+        throw new SpecEngineError('EDGE_NOT_FOUND', `No edge with id "${id}"`)
+      }
+      edges.delete(id)
+      notify()
+    },
+
+    getEdges() {
+      return [...edges.values()].map(cloneEdge)
+    },
+
+    getOutgoingEdges(id) {
+      return [...edges.values()].filter((e) => e.from === id).map(cloneEdge)
+    },
+
+    getIncomingEdges(id) {
+      return [...edges.values()].filter((e) => e.to === id).map(cloneEdge)
+    },
+
+    getInDegree(id, type) {
+      let count = 0
+      for (const e of edges.values()) {
+        if (e.to === id && (type === undefined || e.type === type)) count += 1
+      }
+      return count
+    },
+
+    getHardReachable(id) {
+      getLive(id)
+      return [...hardReachableFrom(id)]
     },
 
     subscribe(listener) {

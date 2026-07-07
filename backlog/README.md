@@ -57,8 +57,8 @@ _Typed store + single validated mutation path. Nothing else is real without this
 | [BL-010](./items/BL-010-typed-block-tree.md) | Typed block-tree data model | feature | critical | done | D1, D5 |
 | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | Spec engine: validated mutation API | feature | critical | done | D2 |
 | [BL-012](./items/BL-012-global-stable-ids.md) | Global stable ID scheme | feature | high | backlog | D5, D13 |
-| [BL-013](./items/BL-013-dependency-graph-model.md) | Dependency graph + edge taxonomy | feature | high | backlog | D5, D9 |
-| [BL-014](./items/BL-014-write-time-cycle-checks.md) | Write-time cycle checks | feature | medium | backlog | D24 |
+| [BL-013](./items/BL-013-dependency-graph-model.md) | Dependency graph + edge taxonomy | feature | high | done | D5, D9 |
+| [BL-014](./items/BL-014-write-time-cycle-checks.md) | Write-time cycle checks | feature | medium | done | D24 |
 | [BL-015](./items/BL-015-triad-templates-in-store.md) | Default triad + editable templates in store | feature | medium | backlog | D17 |
 
 ### M2 — Projection & Git durability

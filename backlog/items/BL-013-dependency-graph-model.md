@@ -1,7 +1,7 @@
 ---
 id: BL-013
 title: Dependency graph + edge taxonomy
-status: backlog
+status: done
 type: feature
 priority: high
 milestone: M1
@@ -20,11 +20,12 @@ session *should know* and may be summarized. This hard/soft split is the spine o
 
 ## Acceptance criteria
 
-- [ ] Edge model with the four types, classified hard vs. soft
-- [ ] Edges cross containment and file boundaries freely (via global IDs)
-- [ ] Graph traversal queries (neighbors, hard-edge reachability, in-degree) exposed for
-      the context builder ([[BL-040]]) and importance model ([[BL-041]])
-- [ ] Edge creation goes through the mutation API ([[BL-011]])
+- [x] Edge model (`Edge {id, from, to, type}`) with the four types, classified hard vs.
+      soft (`src/engine/edges.ts`: `isHardEdge`, `HARD_/SOFT_EDGE_TYPES`)
+- [x] Edges reference global node ids, so they cross containment and files freely
+- [x] Graph queries exposed for [[BL-040]]/[[BL-041]]: `getOutgoingEdges`, `getIncomingEdges`,
+      `getInDegree` (fan-in), `getHardReachable` (transitive hard-edge reachability)
+- [x] Edge creation goes through the mutation API (`addEdge`/`removeEdge` on the spec engine)
 
 ## Notes / open questions
 

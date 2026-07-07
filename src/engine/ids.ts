@@ -1,4 +1,4 @@
-import type { NodeId, NodeType } from './types'
+import type { EdgeId, EdgeType, NodeId, NodeType } from './types'
 
 /**
  * Minimal global-id generator. Ids are stable and globally unique so dependency
@@ -6,5 +6,9 @@ import type { NodeId, NodeType } from './types'
  * — including projection-embeddable anchors — is formalized in BL-012.
  */
 export function createNodeId(type: NodeType): NodeId {
+  return `${type}-${globalThis.crypto.randomUUID()}`
+}
+
+export function createEdgeId(type: EdgeType): EdgeId {
   return `${type}-${globalThis.crypto.randomUUID()}`
 }

@@ -78,9 +78,39 @@ export interface NodePatch {
   state?: DecisionState // deferred-decision only
 }
 
+// --- Dependency graph (BL-013) ---
+// A SEPARATE relation over the same node ids (D5/P5): "what blocks what". Edges are
+// records {from, to, type} that cross containment and files freely. Directed from → to.
+
+export type EdgeId = string
+
+/**
+ * Four edge types in two behavioral classes (D9):
+ *  - HARD (`blocks`, `supersedes`): change what a session is *allowed* to do; never
+ *    silently dropped; hard-edge cycles are rejected at write time (BL-014/D24).
+ *  - SOFT (`relates`, `informs`): change what a session *should be aware of*; summarizable;
+ *    soft cycles are harmless and allowed.
+ * Convention: a `blocks` edge from A → B means A blocks B (B waits on A).
+ */
+export type EdgeType = 'blocks' | 'supersedes' | 'relates' | 'informs'
+
+export interface Edge {
+  readonly id: EdgeId
+  from: NodeId
+  to: NodeId
+  type: EdgeType
+}
+
+export interface AddEdgeInput {
+  from: NodeId
+  to: NodeId
+  type: EdgeType
+}
+
 /** Serializable form of the store — the seam for projection/rehydration (BL-020/022). */
 export interface SpecSnapshot {
   version: 1
   rootIds: NodeId[]
   nodes: Node[]
+  edges: Edge[]
 }
