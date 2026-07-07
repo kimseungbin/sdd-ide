@@ -1,6 +1,7 @@
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import type { ButtonHTMLAttributes } from 'react'
+import { cn } from '../../lib/cn'
 
 /*
   Reference component for the UI rules (CLAUDE.md).
@@ -46,5 +47,7 @@ export interface ButtonProps
 
 export function Button({ variant, size, asChild = false, ...props }: ButtonProps) {
   const Comp = asChild ? Slot : 'button'
-  return <Comp className={button({ variant, size })} {...props} />
+  // cn() de-dupes conflicting utilities as variants grow (internal safety net, not a
+  // public className escape hatch — Rule 2 still holds).
+  return <Comp className={cn(button({ variant, size }))} {...props} />
 }
