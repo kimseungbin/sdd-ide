@@ -1,0 +1,10 @@
+appId: dev.seungbin.sdd-ide
+productName: SDD IDE
+directories:
+  output: dist
+  buildResources: build
+files:
+  - out/**/*
+  - package.json
+mac:
+  target: dir

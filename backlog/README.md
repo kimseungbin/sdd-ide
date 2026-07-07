@@ -46,7 +46,7 @@ _Resolve the open questions that gate architecture choices before committing._
 
 | ID | Title | type | prio | status | decisions |
 |----|-------|------|------|--------|-----------|
-| [BL-001](./items/BL-001-electron-shell-scaffold.md) | Electron app shell scaffold | infra | high | backlog | D21 |
+| [BL-001](./items/BL-001-electron-shell-scaffold.md) | Electron app shell scaffold | infra | high | in-review | D21 |
 | [BL-002](./items/BL-002-block-editor-spike.md) | Block editor spike: Slate/Plate vs Tiptap | spike | critical | backlog | D18 |
 
 ### M1 — Spec engine core (the load-bearing layer)

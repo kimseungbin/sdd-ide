@@ -1,7 +1,7 @@
 ---
 id: BL-001
 title: Electron app shell scaffold
-status: backlog
+status: in-review
 type: infra
 priority: high
 milestone: M0
@@ -19,10 +19,10 @@ on Electron's Node runtime. This is scaffolding, not product.
 
 ## Acceptance criteria
 
-- [ ] Electron app boots to a blank window (main + renderer + preload wired)
-- [ ] TypeScript, lint, and a test runner configured
-- [ ] Node subprocess spawn works from the main process (proves the D8 CLI-attach path)
-- [ ] Repo builds and packages for the local platform
+- [x] Electron app boots to a blank window (main + renderer + preload wired)
+- [x] TypeScript, lint (Oxlint), and a test runner (Vitest) configured
+- [x] Node subprocess spawn works from the main process (proves the D8 CLI-attach path)
+- [x] Repo builds (electron-vite build ✓); packaging configured (electron-builder) — full package run pending
 
 ## Notes / open questions
 
