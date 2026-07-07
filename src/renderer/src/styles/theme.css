@@ -1,0 +1,30 @@
+@import 'tailwindcss';
+
+/*
+  Design tokens — the single source of truth for the UI (CLAUDE.md Rule 4).
+  Tokens declared here become Tailwind utilities (e.g. --color-brand -> bg-brand,
+  text-brand; --radius-md -> rounded-md). Components reference these, never raw
+  hex/px values.
+*/
+@theme {
+  --color-brand: #4f46e5;
+  --color-brand-fg: #ffffff;
+  --color-surface: #ffffff;
+  --color-fg: #18181b;
+  --color-muted: #71717a;
+  --color-border: #e4e4e7;
+  --color-ring: #a5b4fc;
+
+  --radius-md: 0.5rem;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-fg);
+  font-family: system-ui, -apple-system, sans-serif;
+}

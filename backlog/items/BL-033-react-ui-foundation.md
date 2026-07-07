@@ -22,12 +22,15 @@ UI rules into actual scaffolding.
 ## Acceptance criteria
 
 - [x] React wired into the renderer (electron-vite + @vitejs/plugin-react, TSX, StrictMode)
-- [ ] Variant system in place (CVA) — closed style-prop API, no `className`/`style` escape hatch
-- [ ] Headless primitive base adopted (Radix / React Aria) with our styled wrapper layer
-- [ ] Design token set defined; components reference tokens only
-- [ ] Lint enforcement for CLAUDE.md Rule 3 (raw semantic elements banned outside their
-      `components/<X>/` home) — verify Oxlint can express it, else add ESLint for that rule
-- [ ] A first reference component (e.g. Button) demonstrating the full pattern + documented props
+- [x] Variant system in place (CVA) — closed style-prop API; `className`/`style` omitted from
+      Button's public props (type-level enforcement of "no escape hatch")
+- [x] Headless primitive base adopted (Radix `Slot` via `asChild`); richer primitives
+      (Dialog, etc.) added as components need them
+- [x] Design token set defined (Tailwind v4 `@theme` in `styles/theme.css`); components
+      reference tokens (bg-brand, rounded-md…), not raw values
+- [ ] Lint enforcement for CLAUDE.md Rule 3 — **verified Oxlint cannot** (`no-restricted-syntax`
+      unimplemented); needs ESLint added for that rule. Decision pending (add 2nd linter vs defer)
+- [x] A first reference component (Button) demonstrating the full pattern + documented props
 
 ## Notes / open questions
 
