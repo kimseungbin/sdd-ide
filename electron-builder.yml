@@ -2,7 +2,7 @@ appId: dev.seungbin.sdd-ide
 productName: SDD IDE
 directories:
   output: dist
-  buildResources: build
+  buildResources: build-resources
 files:
   - out/**/*
   - package.json

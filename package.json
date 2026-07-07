@@ -18,9 +18,12 @@
     "lint:eslint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "ladle": "ladle serve",
+    "ladle:build": "ladle build",
     "package": "electron-vite build && electron-builder"
   },
   "devDependencies": {
+    "@ladle/react": "^5.1.1",
     "@tailwindcss/vite": "^4.3.2",
     "@types/node": "^26.1.0",
     "@types/react": "^19.2.17",

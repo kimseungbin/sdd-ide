@@ -76,6 +76,7 @@ _Adopt an editor via adapter; its doc model is a projection of the store._
 | ID | Title | type | prio | status | decisions |
 |----|-------|------|------|--------|-----------|
 | [BL-033](./items/BL-033-react-ui-foundation.md) | React UI foundation & component system | feature | high | in-progress | D18, D21 |
+| [BL-034](./items/BL-034-component-workshop-ladle.md) | Component workshop & docs (Ladle) | infra | medium | done | D18 |
 | [BL-030](./items/BL-030-editor-adapter.md) | Editor adapter: doc model as store projection | feature | high | backlog | D18, D2 |
 | [BL-031](./items/BL-031-containment-editing-ux.md) | Containment editing UX (nesting, drag-drop) | feature | medium | backlog | D5 |
 | [BL-032](./items/BL-032-custom-block-types.md) | Custom block types incl. deferred-decision node | feature | medium | backlog | D6, D17 |

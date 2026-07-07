@@ -44,7 +44,8 @@ non-determinism of ad-hoc styling the same way the data layer removes it from wr
 
 7. **Document each component's prop vocabulary.** A component's restricted props
    (variants/sizes/states) are typed and documented as the single source of truth for how
-   it may vary.
+   it may vary. In practice: every component ships a `*.stories.tsx` (Ladle — `npm run ladle`)
+   covering its variants plus a controls **Playground** — that's the living prop-vocabulary doc.
 
 ### Lint enforcement (Rule 3)
 
