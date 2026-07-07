@@ -54,8 +54,8 @@ _Typed store + single validated mutation path. Nothing else is real without this
 
 | ID | Title | type | prio | status | decisions |
 |----|-------|------|------|--------|-----------|
-| [BL-010](./items/BL-010-typed-block-tree.md) | Typed block-tree data model | feature | critical | backlog | D1, D5 |
-| [BL-011](./items/BL-011-spec-engine-mutation-api.md) | Spec engine: validated mutation API | feature | critical | backlog | D2 |
+| [BL-010](./items/BL-010-typed-block-tree.md) | Typed block-tree data model | feature | critical | done | D1, D5 |
+| [BL-011](./items/BL-011-spec-engine-mutation-api.md) | Spec engine: validated mutation API | feature | critical | done | D2 |
 | [BL-012](./items/BL-012-global-stable-ids.md) | Global stable ID scheme | feature | high | backlog | D5, D13 |
 | [BL-013](./items/BL-013-dependency-graph-model.md) | Dependency graph + edge taxonomy | feature | high | backlog | D5, D9 |
 | [BL-014](./items/BL-014-write-time-cycle-checks.md) | Write-time cycle checks | feature | medium | backlog | D24 |
@@ -129,6 +129,7 @@ unless promoted to a hard edge on a specific item.
 | DD-2 | Final block-editor pick (Slate/Plate vs. Tiptap) | [BL-002](./items/BL-002-block-editor-spike.md) | hard → M3 | spike results in |
 | DD-3 | PM participation model (async web surface vs. stays PR-comments-only) | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | soft | post-v1, once dev-centric core ships (D20) |
 | DD-4 | Production CSP hardening (drop dev `'unsafe-inline'`, set via main-process headers) | [BL-033](./items/BL-033-react-ui-foundation.md) | soft | before first release |
+| DD-5 | Engine runtime placement (main+IPC vs. in-renderer) | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | soft | when persistence lands (BL-022) |
 
 ---
 

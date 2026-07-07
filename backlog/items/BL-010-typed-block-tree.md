@@ -1,7 +1,7 @@
 ---
 id: BL-010
 title: Typed block-tree data model
-status: backlog
+status: done
 type: feature
 priority: critical
 milestone: M1
@@ -18,10 +18,12 @@ off this store. Not text — a typed tree of nodes.
 
 ## Acceptance criteria
 
-- [ ] Node types defined (spec container, requirement, design, task, deferred-decision, …)
-- [ ] Containment tree supports nesting, ordering, and move
-- [ ] In-memory store is the single working representation the UI reads from
-- [ ] Store is serializable/reconstructable (feeds rehydration in [[BL-022]])
+- [x] Node types defined as a discriminated union (`src/engine/types.ts`): spec,
+      requirement, design, task, deferred-decision, text
+- [x] Containment tree supports nesting, ordering (index), and move
+- [x] In-memory normalized store (`Map<id, Node>` + rootIds) is the single working representation
+- [x] Store is serializable/reconstructable via `toSnapshot()` / `createSpecEngine(snapshot)`
+      (round-trip tested; feeds rehydration in [[BL-022]])
 
 ## Notes / open questions
 

@@ -1,7 +1,7 @@
 ---
 id: BL-011
 title: "Spec engine: validated mutation API"
-status: backlog
+status: done
 type: feature
 priority: critical
 milestone: M1
@@ -20,10 +20,13 @@ cycle checks [[BL-014]]).
 
 ## Acceptance criteria
 
-- [ ] Typed, synchronous, in-process API over the block tree ([[BL-010]])
-- [ ] All mutations validated; invalid mutations rejected, not silently coerced
-- [ ] No mutation path exists that bypasses this API (no text/escape-hatch write)
-- [ ] API surface designed so the MCP adapter ([[BL-050]]) can expose the *same* ops
+- [x] Typed, synchronous, in-process API over the block tree ([[BL-010]]):
+      `createNode/updateNode/moveNode/deleteNode` + queries + `subscribe`
+- [x] All mutations validated; invalid rejected via `SpecEngineError` (NODE_NOT_FOUND,
+      INVALID_PATCH, CYCLE), not silently coerced
+- [x] No mutation path bypasses this API — queries return **clones**, so callers cannot
+      mutate the store off-path (verified by test)
+- [x] Command-style API maps cleanly to MCP tools ([[BL-050]]); role-awareness layered later ([[BL-054]])
 
 ## Notes / open questions
 
@@ -33,3 +36,6 @@ cycle checks [[BL-014]]).
 ## Deferred decisions
 
 - DD-3: PM participation model — soft, revisit post-v1 (D20). Does not gate the API shape.
+- DD-5: Engine runtime placement — main process (Node/filesystem) with renderer over IPC,
+  vs. in-renderer with persistence via IPC. Soft; the engine is pure in-memory so this is
+  deferred until persistence lands ([[BL-022]]).
