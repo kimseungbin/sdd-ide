@@ -48,13 +48,11 @@ non-determinism of ad-hoc styling the same way the data layer removes it from wr
 
 ### Lint enforcement (Rule 3)
 
-The linter is **Oxlint** (not ESLint). Rule 3 needs a directory-scoped ban on raw elements:
-allow `<button>` only under `components/Button/`, forbid it elsewhere. **Verified (2026-07):
-Oxlint does not implement `no-restricted-syntax`**, so it cannot express this rule today.
-Enforcing Rule 3 therefore requires adding **ESLint** for that single rule (core
-`no-restricted-syntax` + per-directory `overrides`), running alongside Oxlint. Not yet
-configured — pending a decision on adding a second linter (see BL-033). Until then, Rule 3
-is a convention enforced by review.
+The primary linter is **Oxlint**; **ESLint runs alongside it for rules Oxlint can't express**
+(`npm run lint` = `oxlint && eslint .`). Oxlint does not implement `no-restricted-syntax`
+(verified 2026-07), so **Rule 3 is enforced by ESLint** (`eslint.config.mjs`): a raw `<button>`
+is an error everywhere except `components/Button/`. Ban another element by extending the
+`no-restricted-syntax` selector plus its per-directory override.
 
-The same applies to enforcing "tokens only" (Rule 4) for Tailwind — banning arbitrary values
-like `bg-[#fff]` needs `eslint-plugin-tailwindcss`, i.e. the same ESLint addition.
+**Rule 4 (tokens only) is not yet lint-enforced** — banning arbitrary Tailwind values like
+`bg-[#fff]` lacks a clean Tailwind-v4-compatible rule for now; enforced by review until one lands.

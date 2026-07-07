@@ -28,8 +28,10 @@ UI rules into actual scaffolding.
       (Dialog, etc.) added as components need them
 - [x] Design token set defined (Tailwind v4 `@theme` in `styles/theme.css`); components
       reference tokens (bg-brand, rounded-md…), not raw values
-- [ ] Lint enforcement for CLAUDE.md Rule 3 — **verified Oxlint cannot** (`no-restricted-syntax`
-      unimplemented); needs ESLint added for that rule. Decision pending (add 2nd linter vs defer)
+- [x] Lint enforcement for CLAUDE.md Rule 3 — ESLint added (`eslint.config.mjs`,
+      `no-restricted-syntax` + per-dir override); verified it errors on a raw `<button>`.
+      `lint` now runs `oxlint && eslint`. (Rule 4 arbitrary-value ban deferred — no clean
+      Tailwind-v4-compatible rule yet.)
 - [x] A first reference component (Button) demonstrating the full pattern + documented props
 
 ## Notes / open questions
