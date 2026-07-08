@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createSpecEngine } from '../../../engine'
-import { indentTarget, outdentTarget, previousBlockId, siblingAfter } from './structural'
+import { dropMove, indentTarget, outdentTarget, previousBlockId, siblingAfter } from './structural'
 
 // spec ─ req ─ task
 //      └ design
@@ -38,5 +38,19 @@ describe('structural moves', () => {
     const { snap, ids } = seeded()
     expect(previousBlockId(snap, ids.design)).toBe(ids.task)
     expect(previousBlockId(snap, ids.spec)).toBeNull()
+  })
+
+  it('dropMove reorders among the target siblings (index computed without the dragged node)', () => {
+    const { snap, ids } = seeded()
+    // Drag design before req: both are spec's children [req, design]; removing design → [req],
+    // so "before req" is index 0.
+    expect(dropMove(snap, ids.design, ids.req, 'before')).toEqual({ parentId: ids.spec, index: 0 })
+    expect(dropMove(snap, ids.design, ids.req, 'after')).toEqual({ parentId: ids.spec, index: 1 })
+  })
+
+  it('dropMove rejects dropping a block onto itself or into its own subtree', () => {
+    const { snap, ids } = seeded()
+    expect(dropMove(snap, ids.req, ids.req, 'before')).toBeNull()
+    expect(dropMove(snap, ids.req, ids.task, 'after')).toBeNull() // task is inside req
   })
 })

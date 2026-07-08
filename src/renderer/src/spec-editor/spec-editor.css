@@ -14,7 +14,10 @@
   margin: 0;
 }
 
-/* Per-block padding + Notion-like hover affordance. */
+/* Per-block padding + Notion-like hover affordance. Left padding leaves room for the drag grip. */
+.spec-editor .ProseMirror {
+  padding-left: 1rem;
+}
 .spec-editor .spec-block {
   margin: 0.1rem 0;
   padding: 0.1rem 0.35rem;
@@ -22,6 +25,14 @@
 }
 .spec-editor .spec-block:hover {
   background: color-mix(in srgb, var(--color-fg) 6%, transparent);
+}
+
+/* Drop indicator while dragging a block to reorder. */
+.spec-editor .spec-block.drop-before {
+  box-shadow: inset 0 2px 0 0 var(--color-brand);
+}
+.spec-editor .spec-block.drop-after {
+  box-shadow: inset 0 -2px 0 0 var(--color-brand);
 }
 
 /* Depth indentation (containment), driven by the projection's data-depth. */

@@ -53,3 +53,33 @@ export function previousBlockId(snapshot: SpecSnapshot, nodeId: NodeId): NodeId 
   const i = blocks.findIndex((b) => b.nodeId === nodeId)
   return i > 0 ? blocks[i - 1].nodeId : null
 }
+
+/** Is `nodeId` inside `ancestorId`'s subtree (used to reject dropping a block into itself)? */
+function isDescendant(snapshot: SpecSnapshot, ancestorId: NodeId, nodeId: NodeId): boolean {
+  let cursor = snapshot.nodes.find((n) => n.id === nodeId)?.parentId ?? null
+  while (cursor !== null) {
+    if (cursor === ancestorId) return true
+    cursor = snapshot.nodes.find((n) => n.id === cursor)?.parentId ?? null
+  }
+  return false
+}
+
+/**
+ * Drop `draggedId` before/after `targetId` among the target's siblings. Index is computed against
+ * the sibling list with the dragged node removed, so it's the post-detach position moveNode wants.
+ * Null when the drop is a no-op or illegal (onto itself or into its own subtree).
+ */
+export function dropMove(
+  snapshot: SpecSnapshot,
+  draggedId: NodeId,
+  targetId: NodeId,
+  side: 'before' | 'after',
+): MoveTarget | null {
+  if (draggedId === targetId) return null
+  if (isDescendant(snapshot, draggedId, targetId)) return null
+  const target = snapshot.nodes.find((n) => n.id === targetId)
+  if (!target) return null
+  const siblings = siblingsOf(snapshot, target.parentId).filter((id) => id !== draggedId)
+  const ti = siblings.indexOf(targetId)
+  return { parentId: target.parentId, index: side === 'before' ? ti : ti + 1 }
+}

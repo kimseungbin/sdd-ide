@@ -1,3 +1,4 @@
+import { useState, type DragEvent, type ReactNode } from 'react'
 import { Node, mergeAttributes } from '@tiptap/core'
 import {
   NodeViewContent,
@@ -10,16 +11,19 @@ import { Button } from '../components/Button'
 import type { DecisionState, NodeType, TaskStatus } from '../../../engine'
 import type { SpecBinding } from './binding'
 import { createSlashCommand } from './slash-command'
+import { dropMove } from './structural'
+import { drag } from './drag'
 import './spec-editor.css'
 
 /*
-  BL-030 — the Tiptap schema for the spec editor. Every store node projects to ONE uniform
-  `specBlock` node; its React NodeView renders the right presentation per `specType` (spec title,
+  BL-030/031/032 — the Tiptap schema for the spec editor. Every store node projects to ONE uniform
+  `specBlock`; its React NodeView renders the right presentation per `specType` (spec title,
   requirement/design section labels, task checkbox, deferred-decision card, plain text). Store
   identity (`nodeId`) + projection attrs live on the node, so an edit maps back to a structured
   mutation. Interactive affordances (checkbox, decision toggle) are `contentEditable=false`
-  widgets that write through the binding (D2); the editable title is the NodeViewContent, so the
-  caret / IME composition stay in the text and are never disturbed by the widgets.
+  widgets writing through the binding (D2); the editable title is the NodeViewContent, so the
+  caret / IME stay in the text. A hover drag handle reorders blocks store-authoritatively: the
+  drop computes a target and calls moveNode — no ProseMirror node surgery.
 */
 const TASK_CYCLE: Record<TaskStatus, TaskStatus> = {
   todo: 'in-progress',
@@ -28,45 +32,39 @@ const TASK_CYCLE: Record<TaskStatus, TaskStatus> = {
 }
 const TASK_GLYPH: Record<TaskStatus, string> = { todo: '○', 'in-progress': '◐', done: '✓' }
 
-function SpecBlockView({ node, extension }: NodeViewProps) {
-  const binding = extension.options.binding as SpecBinding
-  const nodeId = node.attrs.nodeId as string
-  const specType = node.attrs.specType as NodeType
-  const depth = (node.attrs.depth as number | null) ?? 0
-  const status = (node.attrs.status as TaskStatus | null) ?? 'todo'
-  const state = (node.attrs.state as DecisionState | null) ?? 'open'
-
-  // Indentation is data-driven (spec-editor.css) so no inline style / arbitrary values.
-  const wrapperProps = { 'data-depth': depth, className: 'spec-block' }
-
+/** The per-type inner presentation (everything except the shared wrapper + drag handle). */
+function blockInner(
+  specType: NodeType,
+  status: TaskStatus,
+  state: DecisionState,
+  nodeId: string,
+  binding: SpecBinding,
+): ReactNode {
   if (specType === 'deferred-decision') {
     return (
-      <NodeViewWrapper {...wrapperProps}>
-        <div className="my-1 rounded-md border border-brand/50 bg-surface p-2">
-          <div className="mb-1 flex items-center gap-2 text-xs text-muted" contentEditable={false}>
-            <span className="rounded bg-brand/15 px-1.5 font-semibold uppercase tracking-wide text-brand">
-              deferred decision
-            </span>
-            <span>· {state}</span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() =>
-                binding.updateNode(nodeId, { state: state === 'open' ? 'resolved' : 'open' })
-              }
-            >
-              {state === 'open' ? 'resolve' : 'reopen'}
-            </Button>
-          </div>
-          <NodeViewContent className="text-fg outline-none" />
+      <div className="my-1 rounded-md border border-brand/50 bg-surface p-2">
+        <div className="mb-1 flex items-center gap-2 text-xs text-muted" contentEditable={false}>
+          <span className="rounded bg-brand/15 px-1.5 font-semibold uppercase tracking-wide text-brand">
+            deferred decision
+          </span>
+          <span>· {state}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              binding.updateNode(nodeId, { state: state === 'open' ? 'resolved' : 'open' })
+            }
+          >
+            {state === 'open' ? 'resolve' : 'reopen'}
+          </Button>
         </div>
-      </NodeViewWrapper>
+        <NodeViewContent className="text-fg outline-none" />
+      </div>
     )
   }
-
   if (specType === 'task') {
     return (
-      <NodeViewWrapper {...wrapperProps} className="spec-block flex items-start gap-1.5">
+      <div className="flex items-start gap-1.5">
         <span contentEditable={false} className="mt-0.5 shrink-0">
           <Button
             variant="ghost"
@@ -84,38 +82,93 @@ function SpecBlockView({ node, extension }: NodeViewProps) {
               : 'flex-1 outline-none'
           }
         />
-      </NodeViewWrapper>
+      </div>
     )
   }
-
   if (specType === 'requirement' || specType === 'design') {
     return (
-      <NodeViewWrapper {...wrapperProps}>
-        <div className="mt-1.5 flex items-baseline gap-2">
-          <span
-            contentEditable={false}
-            className="shrink-0 rounded bg-brand/15 px-1.5 text-xs font-semibold uppercase tracking-wide text-brand"
-          >
-            {specType}
-          </span>
-          <NodeViewContent className="flex-1 text-base font-semibold outline-none" />
-        </div>
-      </NodeViewWrapper>
+      <div className="mt-1.5 flex items-baseline gap-2">
+        <span
+          contentEditable={false}
+          className="shrink-0 rounded bg-brand/15 px-1.5 text-xs font-semibold uppercase tracking-wide text-brand"
+        >
+          {specType}
+        </span>
+        <NodeViewContent className="flex-1 text-base font-semibold outline-none" />
+      </div>
     )
   }
-
   if (specType === 'spec') {
-    return (
-      <NodeViewWrapper {...wrapperProps}>
-        <NodeViewContent className="mt-1 text-xl font-bold outline-none" />
-      </NodeViewWrapper>
-    )
+    return <NodeViewContent className="mt-1 text-xl font-bold outline-none" />
+  }
+  return <NodeViewContent className="text-fg outline-none" />
+}
+
+function SpecBlockView({ node, extension }: NodeViewProps) {
+  const binding = extension.options.binding as SpecBinding
+  const nodeId = node.attrs.nodeId as string
+  const specType = node.attrs.specType as NodeType
+  const depth = (node.attrs.depth as number | null) ?? 0
+  const status = (node.attrs.status as TaskStatus | null) ?? 'todo'
+  const state = (node.attrs.state as DecisionState | null) ?? 'open'
+  const [dropSide, setDropSide] = useState<'before' | 'after' | null>(null)
+
+  const sideFrom = (event: DragEvent<HTMLElement>): 'before' | 'after' => {
+    const rect = event.currentTarget.getBoundingClientRect()
+    return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
   }
 
-  // text (and any fallback)
+  const onDragOver = (event: DragEvent<HTMLElement>): void => {
+    const dragged = drag.get()
+    if (!dragged || dragged === nodeId) return
+    event.preventDefault()
+    event.stopPropagation()
+    setDropSide(sideFrom(event))
+  }
+
+  const onDrop = (event: DragEvent<HTMLElement>): void => {
+    const dragged = drag.get()
+    setDropSide(null)
+    if (!dragged || dragged === nodeId) return
+    event.preventDefault()
+    event.stopPropagation()
+    const snapshot = binding.getSnapshot()
+    if (!snapshot) return
+    const move = dropMove(snapshot, dragged, nodeId, sideFrom(event))
+    if (move) binding.moveNode(dragged, move.parentId, move.index)
+    drag.end()
+  }
+
+  const dropClass =
+    dropSide === 'before' ? ' drop-before' : dropSide === 'after' ? ' drop-after' : ''
+
   return (
-    <NodeViewWrapper {...wrapperProps}>
-      <NodeViewContent className="text-fg outline-none" />
+    <NodeViewWrapper
+      data-depth={depth}
+      className={`spec-block group relative${dropClass}`}
+      onDragOver={onDragOver}
+      onDragLeave={() => setDropSide(null)}
+      onDrop={onDrop}
+    >
+      <span
+        aria-hidden
+        contentEditable={false}
+        draggable
+        onDragStart={(event) => {
+          drag.start(nodeId)
+          event.dataTransfer.effectAllowed = 'move'
+          event.dataTransfer.setData('text/plain', nodeId)
+          event.stopPropagation()
+        }}
+        onDragEnd={() => {
+          drag.end()
+          setDropSide(null)
+        }}
+        className="absolute -left-4 top-0.5 hidden cursor-grab select-none text-muted group-hover:block"
+      >
+        ⠿
+      </span>
+      {blockInner(specType, status, state, nodeId, binding)}
     </NodeViewWrapper>
   )
 }
