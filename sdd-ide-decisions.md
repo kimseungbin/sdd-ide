@@ -13,8 +13,9 @@ including fragile `- [ ]` / `- [x]` checkbox syntax.
 
 **Our bet:** invert this. A **typed, structured block tree is the source of truth**
 (Notion-style). Both the human UI and the LLM agent mutate that store through the
-**same validated API** — never by parsing or editing text. Markdown is demoted to a
-generated, read-only *projection*, never a source of truth and never a write path.
+**same validated API** — never by parsing or editing text. Text is never a source of truth
+and never a write path. (Session 3, D30: the store persists to a local DB and is itself the
+durable record — there is no committed text projection at all.)
 
 The pain this targets: agents and tools today "read and update markdown, not using an
 API" — brittle, drift-prone, and opaque.
@@ -23,25 +24,29 @@ API" — brittle, drift-prone, and opaque.
 
 ## 1. Decisions Locked
 
-### D1 — Source of truth: structured store drives everything; committed projection is the durable record (AMENDED by O19)
+### D1 — Source of truth: structured store drives everything; the store IS the durable record (AMENDED by O19, RE-AMENDED by D30)
 - Internal representation is a **typed block tree**, not text. The store drives everything
   in the IDE.
 - **Mutation invariant (unchanged, load-bearing):** truth changes *only* through structured
-  API mutations (D2). The agent NEVER text-edits; markdown is never a write path. The
-  projection regenerates from structured changes. This half of D1 is inviolable.
-- **Durability (AMENDED per O19 — Git-native chosen):** the **committed text projection is
-  the durable record of truth**; the live structured store is a **rehydratable working
-  layer** reconstructed from it deterministically. This is NOT "markdown is truth" — it's
-  "structured mutation is the only way truth changes, AND the committed projection is where
-  truth durably lives once committed."
+  API mutations (D2). The agent NEVER text-edits; there is no text write path. This half of
+  D1 is inviolable.
+- **Durability (RE-AMENDED per D30 — externalized local store):** the **structured store IS
+  the durable record**, persisted to a local per-project database (SQLite). There is no
+  committed text projection and no rehydration-from-Git. This restores D1 to its purest form —
+  the store is both the working truth and where truth durably lives — with the mutation
+  invariant unchanged. (Superseded: the O19 Git-native text-projection model — see D30.)
 - **What O19 gave up vs. kept:** gave up "the store is the *only* place truth lives"; kept
   "structured mutation is the *only* way truth changes." The membrane (D7), single mutation
   path (P2), and no-text-write-path rule all remain intact — only the *location of
-  durability* moved, not the *mechanism of mutation*.
+  durability* moved, not the *mechanism of mutation*. **D30 reclaims what O19 gave up** — with
+  the external store, the store is again the sole home of durable truth; only the *mechanism*
+  (structured-mutation-only) was ever inviolable, and it still is.
 - Original rationale still holds for the mutation invariant: eliminates parse/serialize
   drift on the *write* path; the agent has no text escape hatch.
 - ⚠ Historical note: pre-O19, D1 read "store is sole truth, text only a read-only
-  projection." O19 (session 1) revised durability to Git-native. See D15, D14, O18.
+  projection." O19 (session 1) revised durability to Git-native (D15, D14, O18). **D30
+  (session 3) reverses that** — specs externalize to a local store; the store is the durable
+  record again. D14/D15/D29 superseded.
 
 ### D2 — Component role: ONE shared spec engine, TWO callers
 - Build a single **spec engine** with a typed, validated API (the "database access
@@ -62,8 +67,9 @@ API" — brittle, drift-prone, and opaque.
 
 ### D4 — PR review integration is in scope
 - Specs must connect to pull-request review.
-- Forces a **deterministic, diffable text projection** of the structured store (see
-  Open Question O1), so spec changes are reviewable alongside code.
+- Session-1 framing forced a diffable text projection (→ O1/D14). **D30 supersedes that** —
+  no text projection; review is app-native (rendered from store history, linked to PRs by
+  stable ID). See D30 / D13 #1.
 
 ### D5 — Two distinct relations over the same nodes: containment AND dependency
 - **Containment (hierarchy):** the Notion-style nesting tree — "what is this spec made
@@ -255,6 +261,13 @@ API" — brittle, drift-prone, and opaque.
   modeling choice — see O17.
 
 ### D13 — PR integration: all four behaviors, ordered by escalating format demand
+- **REWORKED by D30 (externalized store):** specs no longer live in Git, so the behaviors
+  re-anchor. #1 spec-diff becomes **app-native** — the IDE renders spec change diffs from the
+  store's own history, not a Git text diff. #2 traceability and #4 merge-gate are **unchanged
+  and strengthened** — they always worked by stable-ID references from commits/PRs to store
+  nodes (like `#123` links an issue), needing no in-repo files. #3 stays (PR comment = input
+  signal → structured mutation, D2) but writes to the store directly, so there is no text
+  round-trip. The format-legibility demands that *ordered* these four are moot (D14 retired).
 - Adopted (in ascending order of what each demands of the committed format):
   1. **Spec-diff inline in the PR** (review specs like code). Demands only: text form is
      legible when diffed. Lowest bar.
@@ -269,7 +282,10 @@ API" — brittle, drift-prone, and opaque.
      query requirement than a serialization one.
 - **Takeaway:** choosing #2 already made stable IDs non-negotiable, pre-deciding O1's core.
 
-### D14 — Committed text form = hybrid: human markdown + embedded stable IDs (LOCKED via O18)
+### D14 — Committed text form = hybrid: human markdown + embedded stable IDs (LOCKED via O18) — SUPERSEDED by D30
+- **SUPERSEDED by D30.** With the spec store externalized (no committed text projection),
+  there is no committed text form to format — this decision, and DD-8 (its reopening), are
+  moot. Retained for history.
 - Given IDs are mandatory (D13 #2), the O1 field collapses:
   - ✗ **Deterministic markdown, no IDs** — eliminated; can't carry identity ⇒ fails
     traceability (#2) and round-trip (#3).
@@ -290,7 +306,12 @@ API" — brittle, drift-prone, and opaque.
   risks invisible corruption; full rejection contradicts O19; confirmation is the minimal
   guard respecting both.
 
-### D15 — Specs live in-repo, alongside code (LOCKED via O19)
+### D15 — Specs live in-repo, alongside code (LOCKED via O19) — REVERSED by D30
+- **REVERSED by D30.** Specs no longer live in-repo. The tension this decision papered over —
+  issue-tracker-shaped (mutable, relational, stateful) data forced through Git's versioned-text
+  grain — is resolved by externalizing the store (local SQLite), referenced from Git by stable
+  ID. Branch-scoped specs (this decision's raison d'être) are given up deliberately for global
+  tracker semantics. Retained for history.
 - Chosen over external-store-synced and dedicated-branch because **all four D13 behaviors
   are Git-native** (PR diffs, commit traceability, CI gating). Putting canonical data
   outside Git then syncing back means re-solving branching/merging/versioning Git already
@@ -570,6 +591,87 @@ recorded here so the rationale is durable rather than buried in commit messages.
 
 ---
 
+## 2d. Decisions Locked (session 3 — spec organization)
+
+_Made while building the workspace UI, when "how do specs organize as the project grows"
+came up. Refines D14/D15 (which settled *that* specs project to markdown in-repo) with *at
+what granularity*._
+
+### D29 — Spec file granularity: one file per spec (default) + promotable node-level file boundaries — SUPERSEDED by D30
+- **SUPERSEDED by D30 (file granularity moot).** With no committed files, per-spec-file
+  granularity and promotable file boundaries no longer apply. The **drill-down navigation**
+  half survives as pure store structure (already realized in the spec pane, BL-038).
+- **Default boundary = one file per spec root.** Each spec (a root containment node with its
+  triad, D17) projects to its own markdown file, so Git branch/merge/diff and PR review (D13)
+  stay scoped per spec. Chosen over: (a) a single whole-project spec file — coarse diffs,
+  merge-conflict + review noise grow with the project; (b) one-file-per-node — precise history
+  but an explosion of tiny files.
+- **Promotable node boundaries ("turn into page").** Any node may be promoted to an additional
+  **projection root**: its subtree externalizes to its own linked file and the parent embeds a
+  stable-ID **link anchor** (reusing D14 anchors) — Notion-style linked subpages. Rehydration
+  reassembles the full forest by following the anchors.
+- **File boundaries are a projection concern only.** The live store stays one continuous
+  containment tree (D1/D5); promotion changes only *where a subtree serializes* — never the
+  logical tree, the mutation path (D2), or the navigation. So the UI is **drill-down by
+  default** and treats inline vs. linked subtrees identically.
+- **Promotion trigger** (manual "turn into page" vs. auto-suggest at a size threshold) left
+  open → DD-11; default is manual.
+- **Dogfood check:** the backlog itself is stored exactly this way — README index + per-item
+  `items/BL-###.md` + `[[links]]` — which is why the pattern was already trusted.
+- Realizes: BL-020 (projection), BL-022 (rehydration), BL-031 (promote UX).
+
+### D30 — Externalize the spec store: local database (SQLite), Git links by reference
+- **The reframe:** the spec/tracker is issue-tracker-shaped data (mutable, relational, stateful,
+  high-churn); Git is a versioned-content store (immutable-ish text, diff/merge). Forcing one
+  through the other is the root of the format/parse-back/merge friction (DD-8, D14, O18).
+  Externalizing the store dissolves it.
+- **Decision:** the structured store is persisted to a **local per-project database (SQLite)**,
+  which is the durable record itself (re-amends D1). No committed text projection, no parse-back,
+  no rehydration-from-Git. Git holds code and references spec nodes by **stable ID** (commits/PRs
+  ↔ nodes, D13 #2), the way `#123` links an issue.
+- **Purifies the thesis, not weakens it:** D1's core (structure is truth; mutation only via API;
+  no text escape hatch) is *strengthened* — the one uncomfortable bend (O19's text projection and
+  its parse-back fidelity risk, §2's "one fidelity-risk surface") is removed. The agent has no
+  text path anywhere.
+- **Fit:** SQLite models both relations cleanly — `nodes` (adjacency list, ordered siblings) for
+  containment, `edges` for the dependency graph; recursive CTEs for traversal. But the hot path
+  stays the **in-memory typed engine** (as built); SQLite is load-on-open + write-through
+  persistence, not the per-op query engine. There is **no parsing** — rows ↔ typed nodes is a
+  lossless mapping. Schema/FK constraints enforce structural consistency at write time — the
+  "regulation" markdown couldn't give.
+- **Cost accepted (SeungBin, session 3):** (a) **branch-scoped specs gone** — specs are global
+  (tracker semantics); "which spec matches this branch" is given up. (b) **No Git-diff spec
+  review** — D13 #1 becomes app-native. Traceability (#2) and merge-gate (#4) survive via IDs.
+- **Placement (resolves DD-5):** engine + SQLite run in the **main process**; the renderer reads
+  via IPC (read-only — the impl session doesn't mutate the spec, D7). Uses Node's built-in
+  **`node:sqlite`** (`DatabaseSync`, synchronous — Electron 43 bundles Node 24) — no native
+  module, no ABI rebuild; strictly simpler than the originally-noted `better-sqlite3`.
+- **Supersedes:** D15 (reversed — not in-repo), D14 + DD-8 (retired — no text form), D29 (mooted
+  — no files; drill-down UI survives). **Re-amends** D1 (store = durable record). **Reworks** D13
+  (#1 app-native). A **cloud store** stays a clean future upgrade behind the same store
+  abstraction (would reopen D19 collaboration).
+- Reworks backlog: M2 (BL-020/021/022) → external-store persistence.
+
+### D31 — Code-editor engine: CodeMirror 6 (over Monaco) — resolves DD-10
+- For the read-first code pane (BL-037). Decided from evidence (npm trends, bundle, our stack + rules):
+  - **Bundle/startup:** CodeMirror ~50–300KB tree-shaken, <100ms; Monaco 2.4–5MB, +1–3s.
+  - **Our rules:** Monaco forces hardcoded hex in JS (Sourcegraph's #1 migration pain) — conflicts
+    with Rule 4 (tokens only). CodeMirror themes via extensions reading our `--cm-*` tokens.
+  - **Stack:** Monaco has documented Vite+Electron worker-bundling pain; CodeMirror embeds as a
+    plain component, no workers.
+  - **Read-first (D20):** CodeMirror's read-only mode is trivial; Monaco's value (IntelliSense) is
+    the heavy editing we deprioritize.
+  - **JetBrains preference:** no JetBrains *web* editor exists; Monaco *is* VS Code's editor and
+    looks like it. CodeMirror is themed to a JetBrains/Darcula token palette, honoring the preference.
+  - Adoption: CodeMirror ~7.0M weekly npm vs Monaco ~6.0M; powers Firefox DevTools, Replit, and
+    Sourcegraph (which migrated *off* Monaco).
+- One tradeoff: Monaco has more robust CJK/IME — minor for a *code* pane (code is ~ASCII); the
+  make-or-break IME requirement lives in the spec block editor (D18/BL-002) + the agent composer
+  (already handled by the `Textarea` primitive).
+- Realizes: BL-037 (read-first editor). Packages: `@codemirror/*` + `@lezer/highlight`.
+
+---
+
 ## 3. Open Questions (not yet decided)
 
 - **O1 — [LEANING → D14]** Committed text = hybrid (human markdown + embedded stable ID
@@ -635,11 +737,14 @@ recorded here so the rationale is durable rather than buried in commit messages.
   orchestration authority is ours.
 - ✗ One long-running agent doing both spec + implementation — rejected per D7; its context
   only accumulates and will pollute regardless of prompting.
-- ⚠ "No markdown at all" (user's initial phrasing) — **refined**, not adopted verbatim:
-  markdown survives strictly as a read-only projection for D4/agent-context/export.
+- ⚠ "No markdown at all" (user's initial phrasing) — **refined**: there is no committed
+  markdown *durable record* (D30 — the store is SQLite). Text may still be generated
+  ephemerally for agent-context and export, but never as a source of truth or a write path.
 
 ---
 
-_Last updated: session 2 (build start) — added implementation-stack decisions D25–D28
-(React, Tailwind v4, Ladle, Oxlint+ESLint). Session-1 product decisions D1–D24 unchanged.
-Build progress is tracked in [`backlog/`](./backlog/README.md)._
+_Last updated: session 3 — added **D30 (externalize the spec store to local SQLite)**: reverses
+D15, retires D14/DD-8, moots D29, re-amends D1, reworks D13. Earlier in session 3: D29 (now
+superseded), and **D31 (CodeMirror 6 code editor, resolves DD-10)**. Session 2 added D25–D28
+(stack). Session-1 product decisions D1–D24 otherwise unchanged. Build progress is tracked in
+[`backlog/`](./backlog/README.md)._

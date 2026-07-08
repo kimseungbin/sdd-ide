@@ -21,14 +21,15 @@ convention inside `- [ ]` lines.
 
 - [x] Every node carries a globally unique, stable ID at creation (`src/engine/ids.ts`:
       `createNodeId`/`createEdgeId` — minimal UUID-based scheme)
-- [ ] IDs survive move/reorder/rename and round-trip through the projection ([[BL-020]])
-- [x] IDs are the anchor for dependency edges ([[BL-013]]) — done; PR traceability ([[BL-062]]) later
+- [x] IDs are the anchor for dependency edges ([[BL-013]]) — done
+- [ ] IDs persist as SQLite primary keys and survive move/reorder/rename ([[BL-020]])
+- [ ] IDs are the reference target from Git commits/PRs to spec nodes (traceability, [[BL-062]])
 
 ## Notes / open questions
 
-- Minimal generator implemented alongside the engine. Remaining work is the
-  **projection-embeddable** anchor form (D14) — unblocked once [[BL-020]] starts.
-- ID must be embeddable unobtrusively in the hybrid markdown projection (D14, [[BL-020]]).
+- Under D30, IDs are DB primary keys and the **Git↔spec reference token** (commit/PR ↔ node,
+  like `#123`). The former "embed the anchor in a markdown projection" work (D14) is dropped —
+  there is no text projection.
 
 ## Deferred decisions
 
