@@ -81,6 +81,17 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
         }
 
         if (event.key === 'Enter' && !event.shiftKey) {
+          // Enter on an EMPTY nested block outdents (exit the list), Notion-style — instead of
+          // spawning another empty sibling. Falls through to create-sibling if it can't outdent.
+          const empty = (block?.content.size ?? 0) === 0
+          if (nodeId && empty) {
+            const target = outdentTarget(snap, nodeId)
+            if (target) {
+              focusAfterSync.current = nodeId
+              binding.moveNode(nodeId, target.parentId, target.index)
+              return true
+            }
+          }
           const current = nodeId ? snap.nodes.find((n) => n.id === nodeId) : undefined
           const type = current?.type === 'task' ? 'task' : 'text'
           const { parentId, index } = siblingAfter(snap, nodeId)
