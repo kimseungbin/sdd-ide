@@ -27,6 +27,8 @@ const button = cva(
       size: {
         sm: 'h-8 px-3 text-sm',
         md: 'h-10 px-4 text-sm',
+        // Square, padding-free — for icon/glyph-only controls (e.g. panel header actions).
+        icon: 'h-6 w-6 text-sm',
       },
     },
     defaultVariants: {

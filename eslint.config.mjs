@@ -23,12 +23,17 @@ export default [
           message:
             'Use the <Button> component, not a raw <button> (CLAUDE.md Rule 3). Raw <button> is allowed only in components/Button/.',
         },
+        {
+          selector: "JSXOpeningElement[name.name='textarea']",
+          message:
+            'Use the <Textarea> component, not a raw <textarea> (CLAUDE.md Rule 3). Raw <textarea> is allowed only in components/Textarea/.',
+        },
       ],
     },
   },
   {
-    // The one place raw <button> is allowed.
-    files: ['src/renderer/src/components/Button/**'],
+    // Each wrapped element's one home, where its raw element may be used.
+    files: ['src/renderer/src/components/Button/**', 'src/renderer/src/components/Textarea/**'],
     rules: {
       'no-restricted-syntax': 'off',
     },

@@ -32,5 +32,5 @@ Playground.args = {
 }
 Playground.argTypes = {
   variant: { options: ['primary', 'ghost'], control: { type: 'radio' } },
-  size: { options: ['sm', 'md'], control: { type: 'radio' } },
+  size: { options: ['sm', 'md', 'icon'], control: { type: 'radio' } },
 }
