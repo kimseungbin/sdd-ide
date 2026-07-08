@@ -9,6 +9,7 @@ import { StarterKit } from '@tiptap/starter-kit'
 import { Button } from '../components/Button'
 import type { DecisionState, NodeType, TaskStatus } from '../../../engine'
 import type { SpecBinding } from './binding'
+import { createSlashCommand } from './slash-command'
 import './spec-editor.css'
 
 /*
@@ -149,5 +150,5 @@ export function createSpecExtensions(binding: SpecBinding) {
     addNodeView: () => ReactNodeViewRenderer(SpecBlockView),
   })
 
-  return [StarterKit, SpecBlock]
+  return [StarterKit, SpecBlock, createSlashCommand(binding)]
 }

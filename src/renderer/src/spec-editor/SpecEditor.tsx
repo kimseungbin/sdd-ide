@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
+import type { Editor } from '@tiptap/core'
 import type { NodeId, SpecSnapshot } from '../../../engine'
 import { createSpecExtensions } from './schema'
 import { snapshotToDoc, structuralSignature } from './projection'
@@ -21,6 +22,18 @@ import type { SpecBinding } from './binding'
 const EMPTY_SNAPSHOT: SpecSnapshot = { version: 1, rootIds: [], nodes: [], edges: [] }
 const TITLE_DEBOUNCE_MS = 250
 
+/** Put the caret inside the block for `nodeId` (used after a slash-insert re-projects). */
+function focusBlock(editor: Editor, nodeId: NodeId): void {
+  let target: number | null = null
+  editor.state.doc.descendants((node, pos) => {
+    if (target === null && node.type.name === 'specBlock' && node.attrs.nodeId === nodeId) {
+      target = pos + node.nodeSize - 1 // just inside the end of the block's content
+    }
+    return target === null
+  })
+  if (target !== null) editor.chain().setTextSelection(target).focus().run()
+}
+
 export function SpecEditor({ binding }: { binding: SpecBinding }) {
   const extensions = useMemo(() => createSpecExtensions(binding), [binding])
   const mountSnap = useMemo(() => binding.getSnapshot(), [binding])
@@ -29,6 +42,7 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
   // diff edits against); and the debounced write-back queue.
   const sigRef = useRef(structuralSignature(mountSnap))
   const storeTitles = useRef(new Map<NodeId, string>())
+  const knownIds = useRef(new Set<NodeId>(mountSnap?.nodes.map((n) => n.id)))
   const pending = useRef(new Map<NodeId, string>())
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -65,10 +79,15 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
     const sync = (): void => {
       const snap = binding.getSnapshot()
       if (snap) for (const n of snap.nodes) storeTitles.current.set(n.id, n.title)
+      const nextIds = new Set<NodeId>(snap?.nodes.map((n) => n.id))
+      const added = [...nextIds].filter((id) => !knownIds.current.has(id))
+      knownIds.current = nextIds
       const sig = structuralSignature(snap)
       if (sig !== sigRef.current) {
         sigRef.current = sig
         editor?.commands.setContent(snapshotToDoc(snap ?? EMPTY_SNAPSHOT), { emitUpdate: false })
+        // A single freshly-created node (e.g. a slash-insert) → drop the caret into it.
+        if (editor && added.length === 1) focusBlock(editor, added[0])
       }
     }
 
