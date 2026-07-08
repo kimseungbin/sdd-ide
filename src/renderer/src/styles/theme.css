@@ -5,17 +5,47 @@
   Tokens declared here become Tailwind utilities (e.g. --color-brand -> bg-brand,
   text-brand; --radius-md -> rounded-md). Components reference these, never raw
   hex/px values.
+
+  Palette: JetBrains/Darcula dark, integrated with the code editor (--cm-* below).
+  Two-tone like JetBrains — panels (--color-surface #3c3f41) sit a touch lighter than
+  the app base (--color-base #2b2b2b), which matches the editor background.
 */
 @theme {
-  --color-brand: #4f46e5;
+  --color-base: #2b2b2b;
+  --color-surface: #3c3f41;
+  --color-fg: #bbbbbb;
+  --color-muted: #808080;
+  --color-border: #4b4b4b;
+  --color-brand: #3592c4;
   --color-brand-fg: #ffffff;
-  --color-surface: #ffffff;
-  --color-fg: #18181b;
-  --color-muted: #71717a;
-  --color-border: #e4e4e7;
-  --color-ring: #a5b4fc;
+  --color-ring: #4e83bd;
 
   --radius-md: 0.5rem;
+}
+
+/*
+  Code-editor palette (DD-10 → CodeMirror 6). A JetBrains/Darcula-inspired token set for the
+  read-first code pane. Kept as CSS custom properties (not @theme utilities) and referenced by
+  the CodeMirror theme via var() — so syntax colors stay tokens (Rule 4), defined once here.
+*/
+:root {
+  --cm-bg: #2b2b2b;
+  --cm-fg: #a9b7c6;
+  --cm-caret: #bbbbbb;
+  --cm-selection: #214283;
+  --cm-gutter: #606366;
+  --cm-active-line: #323232;
+  --cm-font-size: 0.8125rem;
+
+  --cm-keyword: #cc7832;
+  --cm-string: #6a8759;
+  --cm-number: #6897bb;
+  --cm-comment: #808080;
+  --cm-function: #ffc66d;
+  --cm-type: #a9b7c6;
+  --cm-property: #9876aa;
+  --cm-tag: #e8bf6a;
+  --cm-invalid: #bc3f3c;
 }
 
 html,
@@ -24,7 +54,8 @@ body {
 }
 
 body {
-  background: var(--color-surface);
+  background: var(--color-base);
   color: var(--color-fg);
+  color-scheme: dark;
   font-family: system-ui, -apple-system, sans-serif;
 }
