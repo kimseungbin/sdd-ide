@@ -20,6 +20,11 @@ interface Active {
   editor: Editor
   binding: SpecBinding
   target: Target | null
+  /** The source block (dimmed while dragging) and the floating ghost that follows the cursor. */
+  source: HTMLElement
+  ghost: HTMLElement
+  offsetX: number
+  offsetY: number
 }
 
 let active: Active | null = null
@@ -44,6 +49,8 @@ function blockAt(editor: Editor, x: number, y: number): { id: NodeId; dom: HTMLE
 
 function onMove(event: PointerEvent): void {
   if (!active) return
+  // The ghost tracks the cursor at the same grab offset.
+  active.ghost.style.transform = `translate(${event.clientX - active.offsetX}px, ${event.clientY - active.offsetY}px)`
   clearIndicator()
   const hit = blockAt(active.editor, event.clientX, event.clientY)
   if (!hit || hit.id === active.draggedId) {
@@ -58,8 +65,10 @@ function onMove(event: PointerEvent): void {
 
 function onUp(): void {
   if (!active) return
-  const { draggedId, binding, target } = active
+  const { draggedId, binding, target, ghost, source } = active
   clearIndicator()
+  ghost.remove()
+  source.classList.remove('dragging')
   window.removeEventListener('pointermove', onMove)
   window.removeEventListener('pointerup', onUp)
   document.body.style.userSelect = ''
@@ -72,10 +81,35 @@ function onUp(): void {
   if (move) binding.moveNode(draggedId, move.parentId, move.index)
 }
 
-/** Begin dragging a block by its grip. Call from the grip's onPointerDown. */
-export function startBlockDrag(draggedId: NodeId, editor: Editor, binding: SpecBinding): void {
+/** Begin dragging a block by its grip. Call from the grip's onPointerDown, passing its block DOM. */
+export function startBlockDrag(
+  draggedId: NodeId,
+  editor: Editor,
+  binding: SpecBinding,
+  source: HTMLElement,
+  startX: number,
+  startY: number,
+): void {
   if (active) return
-  active = { draggedId, editor, binding, target: null }
+  const rect = source.getBoundingClientRect()
+  const ghost = source.cloneNode(true) as HTMLElement
+  ghost.classList.add('spec-drag-ghost')
+  ghost.classList.remove('dragging')
+  ghost.style.width = `${rect.width}px`
+  ghost.style.transform = `translate(${rect.left}px, ${rect.top}px)`
+  document.body.appendChild(ghost)
+  source.classList.add('dragging')
+
+  active = {
+    draggedId,
+    editor,
+    binding,
+    target: null,
+    source,
+    ghost,
+    offsetX: startX - rect.left,
+    offsetY: startY - rect.top,
+  }
   document.body.style.userSelect = 'none' // don't select text while dragging
   document.body.style.cursor = 'grabbing' // visible feedback that a drag is in progress
   window.addEventListener('pointermove', onMove)

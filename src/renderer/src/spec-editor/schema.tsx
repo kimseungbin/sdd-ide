@@ -120,7 +120,10 @@ function SpecBlockView({ node, editor, extension }: NodeViewProps) {
         onPointerDown={(event) => {
           event.preventDefault()
           event.stopPropagation()
-          startBlockDrag(nodeId, editor, binding)
+          const source = (event.currentTarget as HTMLElement).closest('.spec-block')
+          if (source instanceof HTMLElement) {
+            startBlockDrag(nodeId, editor, binding, source, event.clientX, event.clientY)
+          }
         }}
         className="spec-grip absolute left-0 top-0 flex h-full w-4 cursor-grab select-none items-center justify-center leading-none text-muted"
       >
