@@ -2,6 +2,7 @@ import { Extension, type Editor } from '@tiptap/core'
 import { ReactRenderer } from '@tiptap/react'
 import { Suggestion, type SuggestionProps, type SuggestionKeyDownProps } from '@tiptap/suggestion'
 import { SlashMenu, type SlashItem, type SlashMenuHandle } from './SlashMenu'
+import { siblingAfter } from './structural'
 import type { SpecBinding } from './binding'
 
 /*
@@ -21,20 +22,14 @@ const ITEMS: SlashItem[] = [
 
 /** Insert a new node as the sibling after the block the caret is in (append root if unknown). */
 function insertBlock(editor: Editor, binding: SpecBinding, item: SlashItem): void {
-  const block = editor.state.selection.$from.node(1)
-  const nodeId = (block?.attrs?.nodeId as string | null) ?? null
+  const nodeId = (editor.state.selection.$from.node(1)?.attrs?.nodeId as string | null) ?? null
   const snapshot = binding.getSnapshot()
-
-  if (!snapshot || !nodeId) {
+  if (!snapshot) {
     binding.createNode({ type: item.type, parentId: null })
     return
   }
-  const current = snapshot.nodes.find((n) => n.id === nodeId)
-  const parentId = current?.parentId ?? null
-  const siblings = parentId
-    ? (snapshot.nodes.find((n) => n.id === parentId)?.children ?? [])
-    : snapshot.rootIds
-  binding.createNode({ type: item.type, parentId, index: siblings.indexOf(nodeId) + 1 })
+  const { parentId, index } = siblingAfter(snapshot, nodeId)
+  binding.createNode({ type: item.type, parentId, index })
 }
 
 function positionAt(el: HTMLElement | null, rect: DOMRect | null | undefined): void {

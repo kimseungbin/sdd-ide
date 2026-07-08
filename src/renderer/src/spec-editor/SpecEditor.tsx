@@ -4,6 +4,7 @@ import type { Editor } from '@tiptap/core'
 import type { NodeId, SpecSnapshot } from '../../../engine'
 import { createSpecExtensions } from './schema'
 import { snapshotToDoc, structuralSignature } from './projection'
+import { indentTarget, outdentTarget, previousBlockId, siblingAfter } from './structural'
 import type { SpecBinding } from './binding'
 
 /*
@@ -45,6 +46,8 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
   const knownIds = useRef(new Set<NodeId>(mountSnap?.nodes.map((n) => n.id)))
   const pending = useRef(new Map<NodeId, string>())
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // After a structural mutation, which block should get the caret once it re-projects.
+  const focusAfterSync = useRef<NodeId | null>(null)
 
   const flush = useRef(() => {
     for (const [id, title] of pending.current) binding.updateNode(id, { title })
@@ -55,6 +58,50 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
   const editor = useEditor({
     extensions,
     content: snapshotToDoc(mountSnap ?? EMPTY_SNAPSHOT),
+    editorProps: {
+      // Structural keys operate on the STORE (D2), not the ProseMirror doc — the reprojection
+      // reflects the move and the caret follows via focusAfterSync / the focus-new heuristic.
+      handleKeyDown: (view, event) => {
+        if (event.isComposing) return false // let the IME own composition keystrokes
+        const sel = view.state.selection
+        const block = sel.$from.node(1)
+        const nodeId = (block?.attrs?.nodeId as NodeId | null) ?? null
+        const snap = binding.getSnapshot()
+        if (!snap) return false
+
+        if (event.key === 'Tab') {
+          if (nodeId) {
+            const target = event.shiftKey ? outdentTarget(snap, nodeId) : indentTarget(snap, nodeId)
+            if (target) {
+              focusAfterSync.current = nodeId
+              binding.moveNode(nodeId, target.parentId, target.index)
+            }
+          }
+          return true // always swallow Tab (never move focus out of the editor)
+        }
+
+        if (event.key === 'Enter' && !event.shiftKey) {
+          const current = nodeId ? snap.nodes.find((n) => n.id === nodeId) : undefined
+          const type = current?.type === 'task' ? 'task' : 'text'
+          const { parentId, index } = siblingAfter(snap, nodeId)
+          binding.createNode({ type, parentId, index })
+          return true // prevent the default split (would duplicate the block's nodeId)
+        }
+
+        if (event.key === 'Backspace') {
+          if (!sel.empty || sel.$from.parentOffset !== 0 || !nodeId) return false
+          const current = snap.nodes.find((n) => n.id === nodeId)
+          const emptyLeaf = block?.content.size === 0 && (current?.children.length ?? 0) === 0
+          if (emptyLeaf) {
+            focusAfterSync.current = previousBlockId(snap, nodeId)
+            binding.deleteNode(nodeId)
+          }
+          return true // at block start: swallow to avoid cross-block content merges
+        }
+
+        return false
+      },
+    },
     onUpdate: ({ editor: instance }) => {
       instance.state.doc.forEach((child) => {
         const id = child.attrs.nodeId as NodeId | null
@@ -86,8 +133,13 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
       if (sig !== sigRef.current) {
         sigRef.current = sig
         editor?.commands.setContent(snapshotToDoc(snap ?? EMPTY_SNAPSHOT), { emitUpdate: false })
-        // A single freshly-created node (e.g. a slash-insert) → drop the caret into it.
-        if (editor && added.length === 1) focusBlock(editor, added[0])
+        if (editor) {
+          // A move/delete names its target; else a single freshly-created node gets the caret.
+          const explicit = focusAfterSync.current
+          focusAfterSync.current = null
+          if (explicit) focusBlock(editor, explicit)
+          else if (added.length === 1) focusBlock(editor, added[0])
+        }
       }
     }
 
