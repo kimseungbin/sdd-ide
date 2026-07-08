@@ -103,7 +103,7 @@ function blockInner(
   return <NodeViewContent className="text-fg outline-none" />
 }
 
-function SpecBlockView({ node, extension }: NodeViewProps) {
+function SpecBlockView({ node, editor, extension }: NodeViewProps) {
   const binding = extension.options.binding as SpecBinding
   const nodeId = node.attrs.nodeId as string
   const specType = node.attrs.specType as NodeType
@@ -120,9 +120,9 @@ function SpecBlockView({ node, extension }: NodeViewProps) {
         onPointerDown={(event) => {
           event.preventDefault()
           event.stopPropagation()
-          startBlockDrag(nodeId, binding)
+          startBlockDrag(nodeId, editor, binding)
         }}
-        className="absolute left-0 top-1 cursor-grab select-none px-1 text-muted opacity-0 transition-opacity group-hover:opacity-100"
+        className="absolute left-0 top-0 flex h-full w-5 cursor-grab select-none items-start justify-center pt-0.5 text-muted opacity-0 transition-opacity group-hover:opacity-100"
       >
         ⠿
       </span>
