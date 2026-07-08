@@ -5,7 +5,7 @@ import { DirectoryPanel } from './panes/DirectoryPanel'
 import { SpecPanel } from './panes/SpecPanel'
 
 /*
-  LeftRail (BL-035) — the workspace's left rail: directory + spec stacked, sharing the rail.
+  RightRail (BL-035) — the workspace's right rail: directory + spec stacked, sharing the rail.
   Each section can be collapsed (header-only, the other fills the rail) and the two can be
   swapped top↔bottom. Expanded sections split the rail height 1:1 (flex).
 */
@@ -16,7 +16,7 @@ const SECTIONS: Record<RailKey, { title: string; render: () => ReactNode }> = {
   spec: { title: 'Spec', render: () => <SpecPanel /> },
 }
 
-export function LeftRail() {
+export function RightRail() {
   const [order, setOrder] = useState<[RailKey, RailKey]>(['dir', 'spec'])
   const [collapsed, setCollapsed] = useState<Record<RailKey, boolean>>({ dir: false, spec: false })
 
