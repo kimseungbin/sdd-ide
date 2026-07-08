@@ -1,7 +1,7 @@
 ---
 id: BL-032
 title: Custom block types incl. deferred-decision node
-status: backlog
+status: in-progress
 type: feature
 priority: medium
 milestone: M3
@@ -19,9 +19,11 @@ rendering.
 
 ## Acceptance criteria
 
-- [ ] Custom block renderer/editor extension point in the adapter ([[BL-030]])
-- [ ] Deferred-decision node renders with its lifecycle state (open/resolved) and edits via API
-- [ ] Template-defined block types render through the same path ([[BL-015]])
+- [x] Custom block renderer/editor extension point in the adapter ([[BL-030]]) — one uniform
+      `specBlock` NodeView renders per `specType`; the slash (`/`) menu inserts block types.
+- [x] Deferred-decision node renders with its lifecycle state (open/resolved) and edits via API —
+      card with a resolve/reopen toggle → `updateNode({state})`.
+- [ ] Template-defined block types render through the same path ([[BL-015]]) — waits on templates.
 
 ## Notes / open questions
 

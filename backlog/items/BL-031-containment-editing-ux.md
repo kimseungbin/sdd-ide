@@ -1,7 +1,7 @@
 ---
 id: BL-031
 title: Containment editing UX (nesting, drag-drop)
-status: backlog
+status: in-progress
 type: feature
 priority: medium
 milestone: M3
@@ -23,10 +23,13 @@ store is a single external DB, not per-spec files.)
 
 ## Acceptance criteria
 
-- [ ] Nest / unnest / reorder blocks via direct manipulation
-- [ ] Drag-drop moves subtrees; all moves go through the mutation API ([[BL-011]])
-- [ ] Progressive disclosure (collapse/expand detail) on the containment tree — drill-down is
-      the default navigation
+- [x] Nest / unnest / reorder blocks via direct manipulation — in the spec editor ([[BL-030]]):
+      Tab / Shift-Tab nest / outdent; drag a block's grip to reorder (`schema.tsx`, `structural.ts`).
+- [x] Drag-drop moves subtrees; all moves go through the mutation API ([[BL-011]]) — `moveNode`
+      moves the node with its subtree; `dropMove` computes the target, no ProseMirror surgery.
+- [ ] Progressive disclosure (collapse/expand detail) — present in the read-only spec tree pane
+      ([[BL-038]]); not yet in the editor. Also: drag currently reorders among siblings; drag-to-
+      *nest* (cross-depth) is still keyboard-only (Tab).
 
 ## Notes / open questions
 
