@@ -10,6 +10,9 @@ build/
 .env
 .env.local
 
+# Local spec store (externalized, not committed — D30)
+.sdd/
+
 # Editor / IDE
 .idea/
 *.swp

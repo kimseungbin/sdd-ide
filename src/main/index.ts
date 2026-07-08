@@ -1,5 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { join } from 'node:path'
+import { registerIpcHandlers, registerSpecIpc } from './ipc'
+import { openSpecStore, seedDemoSpec } from './specStore'
 
 function createWindow(): void {
   const window = new BrowserWindow({
@@ -25,6 +27,14 @@ function createWindow(): void {
 }
 
 app.whenReady().then(() => {
+  registerIpcHandlers()
+
+  // The spec store + engine live in main (D30): a local SQLite DB in the project's .sdd/ dir.
+  // Seed a demo spec on first run (empty DB); replaced by real specs once BL-022 lands.
+  const specStore = openSpecStore(join(process.cwd(), '.sdd', 'spec.db'))
+  if (specStore.engine.getRoots().length === 0) seedDemoSpec(specStore.engine)
+  registerSpecIpc(specStore)
+
   createWindow()
 
   app.on('activate', () => {
