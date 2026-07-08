@@ -437,6 +437,24 @@ API" — brittle, drift-prone, and opaque.
     least-friction for D5/D14, accept beta risk); stability/IME-first → **Tiptap** (safe).
     D20's "control-first" direction aligns more with Slate, but Tiptap carries lower
     production risk. **SeungBin's call on the flexibility-vs-stability weight.**
+- **RESOLVED (2026-07-08, spike [[BL-002]]) → Tiptap (ProseMirror). Resolves DD-2.** The
+  side-by-side prototype settled it from evidence:
+  1. **Korean IME (make-or-break):** *both* handled Korean composition cleanly — no dropped/
+     doubled jamo, cursor stable mid-composition, incl. inside the custom block. The check
+     that would have killed Slate ("if Slate breaks here, Slate is out") did **not** fire.
+  2. **Adapter friction:** Slate is lower-friction (its value *is* a block list with native
+     ids); Tiptap needs a grafted `blockId` + whole-doc reconcile. Real, but a one-time cost
+     paid once in the BL-030 adapter — not an ongoing tax.
+  3. **Custom blocks:** both work; Tiptap's is a schema-validated node + NodeView, Slate's a
+     lightweight element.
+  - **Why Tiptap wins once IME ties:** the deciding axes become the ones the spike scoped out.
+    (a) **Schema alignment with the thesis** — ProseMirror's strict schema enforces document
+    validity *by construction*, the same principle as the constrained mutation API (D2/P2);
+    Slate is schema-less and permits invalid intermediate states you must normalize. (b)
+    **Load-bearing core** — the editor underpins all of M3; a mature library beats a still-0.x
+    beta one. (c) **Many custom block types + templates (D17)** scale better on validated
+    NodeViews. (d) Mature Yjs collab keeps D19/O6 open. Slate's flexibility is precisely the
+    non-determinism the product removes elsewhere — so it's the wrong kind of "free."
 
 ### D19 — Drop real-time collaboration for v1; Git async collaboration only (O6)
 - **Two collaboration layers, deliberately keeping only one:**

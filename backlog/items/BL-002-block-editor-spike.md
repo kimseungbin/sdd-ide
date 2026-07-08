@@ -1,7 +1,7 @@
 ---
 id: BL-002
 title: "Block editor spike: Slate/Plate vs Tiptap"
-status: backlog
+status: done
 type: spike
 priority: critical
 milestone: M0
@@ -17,17 +17,25 @@ tradeoff and the Korean-IME risk can only be settled by typing into a prototype.
 to **3 targeted checks** — everything else (perf, bundle size) is noise at this stage.
 Output is a decision (resolves DD-2), not production code.
 
-## Acceptance criteria
+- [x] **Korean IME composition** — verified live in both prototypes: Korean composition holds
+      mid-cursor-move and inside the custom block, no dropped/doubled jamo. The Slate-killer
+      check did **not** fire — both pass.
+- [x] **Data-model adapter friction** — both wired to a shared single-write-path store adapter
+      with a live mutation log. Slate lower-friction (value is a block list w/ native ids);
+      Tiptap needs a grafted `blockId` + whole-doc reconcile (one-time cost, deferred to BL-030).
+- [x] **Custom block types** — deferred-decision block built in both (Tiptap: schema-validated
+      node + NodeView; Slate: element + render branch). Tiptap's path extends to templates (D17).
+- [x] **Written recommendation → resolves DD-2: Tiptap (ProseMirror).** Evidence + reasoning in
+      the spike's `FINDINGS.md` and in [[D18]] (decisions log). Since IME tied, the decision
+      turned on schema-validity-by-construction (D2 alignment), maturity vs Slate's beta, and
+      custom-block scaling.
 
-- [ ] **Korean IME composition** — block mutation / cursor movement does not break
-      mid-composition. (Highest priority — the whole reason Slate's beta status is a risk.
-      If Slate breaks here, Slate is out.)
-- [ ] **Data-model adapter friction** — minimal adapter making the editor's doc model a
-      projection of the store (D1), edits flowing via the API (D2). Judge whether Slate's
-      schema-less core is genuinely lower-friction vs. ProseMirror's strict schema.
-- [ ] **Custom block types** — render/edit a custom block (e.g. deferred-decision node,
-      D6); confirm the path extends to template definitions (D17).
-- [ ] Written recommendation with the evidence → resolves DD-2.
+## Resolution
+
+**DD-2 → Tiptap.** `@tiptap/*` promoted to runtime dependencies; the Slate prototype + `slate*`
+deps were removed. The Tiptap prototype (`src/renderer/src/spike/blockeditor/`) is kept as the
+seed for the real editor, built in [[BL-030]] (a proper store-projection adapter replaces the
+spike's whole-doc reconcile).
 
 ## Notes / open questions
 

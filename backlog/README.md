@@ -48,7 +48,7 @@ _Resolve the open questions that gate architecture choices before committing._
 | ID | Title | type | prio | status | decisions |
 |----|-------|------|------|--------|-----------|
 | [BL-001](./items/BL-001-electron-shell-scaffold.md) | Electron app shell scaffold | infra | high | done | D21 |
-| [BL-002](./items/BL-002-block-editor-spike.md) | Block editor spike: Slate/Plate vs Tiptap | spike | critical | backlog | D18 |
+| [BL-002](./items/BL-002-block-editor-spike.md) | Block editor spike: Slate/Plate vs Tiptap | spike | critical | done | D18 |
 | [BL-003](./items/BL-003-dev-ci-pipeline.md) | Dev CI pipeline (GitHub Actions) | infra | medium | done | — |
 
 ### M1 — Spec engine core (the load-bearing layer)
@@ -134,7 +134,7 @@ unless promoted to a hard edge on a specific item.
 | ID | Question | surfaced by | edge | trigger to resolve |
 |----|----------|-------------|------|--------------------|
 | DD-1 | Fan-in = direct in-degree vs. transitive descendant weight? (O17) | [BL-041](./items/BL-041-importance-model.md) | soft | real graph data shows direct in-degree misses true keystones |
-| DD-2 | Final block-editor pick (Slate/Plate vs. Tiptap) | [BL-002](./items/BL-002-block-editor-spike.md) | hard → M3 | spike results in |
+| ~~DD-2~~ | Final block-editor pick (Slate/Plate vs. Tiptap) | [BL-002](./items/BL-002-block-editor-spike.md) | hard → M3 | **RESOLVED (2026-07-08) → Tiptap** (ProseMirror): both passed Korean IME, so schema-validity (D2), maturity, and custom-block scaling decided it. See [[D18]]. Unblocks [[BL-030]]. |
 | DD-3 | PM participation model (async web surface vs. stays PR-comments-only) | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | soft | post-v1, once dev-centric core ships (D20) |
 | DD-4 | Production CSP hardening (drop dev `'unsafe-inline'`, set via main-process headers) | [BL-033](./items/BL-033-react-ui-foundation.md) | soft | before first release |
 | ~~DD-5~~ | Engine runtime placement (main+IPC vs. in-renderer) | [BL-011](./items/BL-011-spec-engine-mutation-api.md) | soft | **RESOLVED by D30** → main process (engine + SQLite), renderer via IPC |

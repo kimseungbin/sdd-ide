@@ -42,21 +42,35 @@ The decisive check. Type 한글 with a real IME into both editors, including:
 
 Watch for: dropped/duplicated jamo, cursor jumps, broken composition, or store-log desync.
 
-**Observed (fill in from live test):**
-- Tiptap: _____
-- Slate: _____
+**Observed (live test, 2026-07-08):**
+- Tiptap: ✅ Korean composition clean — no dropped/doubled jamo, cursor stable mid-composition.
+- Slate: ✅ Korean composition clean too. The Slate-killer check did **not** fire.
 
 > Prior art: ProseMirror has years of battle-tested CJK composition handling; Slate's beta
-> status and historical IME bugs are exactly why this check exists. But the decision is made
-> from the live evidence above, not this note.
+> status and historical IME bugs are exactly why this check exists. The live evidence tied.
 
 ---
 
-## Recommendation → DD-2  *(PENDING live IME result)*
+## Recommendation → DD-2: **Tiptap (ProseMirror)**
 
-If Slate holds up on IME as well as Tiptap → the friction/flexibility edge favors **Slate**.
-If Slate breaks or degrades on IME (per BL-002: "If Slate breaks here, Slate is out") →
-**Tiptap**, accepting the adapter/reconcile friction as the price of composition robustness.
+Both editors passed the make-or-break IME check, so the friction axis (#2, favoring Slate) is
+no longer the tiebreaker. Once IME ties, the decision turns on the axes the spike scoped out,
+and they favor Tiptap:
 
-_Record the final pick here, then propagate to `BL-002` AC, `sdd-ide-decisions.md` (DD-2), and
-the backlog DD-2 row; promote the winner from devDependencies to dependencies in BL-030._
+- **Schema validity by construction** — ProseMirror's strict schema enforces document validity
+  the same way the engine's mutation API does (D2/P2); Slate is schema-less and permits invalid
+  intermediate states you must normalize. Tiptap is the on-thesis choice.
+- **Maturity** — the editor is load-bearing for all of M3; a production-grade library beats a
+  still-0.x beta one.
+- **Custom-block scaling** — many block types + templates (D17) ride better on validated
+  NodeViews; mature Yjs collab keeps D19/O6 open.
+
+Slate's lower adapter friction is a **one-time cost** paid once in the BL-030 adapter, not an
+ongoing tax — not enough to outweigh the above.
+
+Recorded in: `BL-002` AC + Resolution, `sdd-ide-decisions.md` (D18), backlog DD-2 row.
+
+**Disposition:** `@tiptap/*` promoted from devDependencies to **dependencies**; the Slate
+prototype (`SlateSpike.tsx`) + `slate*` deps were removed. The **Tiptap prototype is kept** here
+as the seed for the real editor adapter (BL-030), which will replace the spike's whole-doc
+reconcile with a proper store-projection adapter.
