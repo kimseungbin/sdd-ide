@@ -81,21 +81,25 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
         }
 
         if (event.key === 'Enter' && !event.shiftKey) {
-          // Enter on an EMPTY nested block outdents (exit the list), Notion-style — instead of
-          // spawning another empty sibling. Falls through to create-sibling if it can't outdent.
+          const current = nodeId ? snap.nodes.find((n) => n.id === nodeId) : undefined
           const empty = (block?.content.size ?? 0) === 0
-          if (nodeId && empty) {
+          if (nodeId && current && empty) {
+            // Empty + nested → climb out (outdent). Once it can't climb further, one more Enter
+            // strips the block type (checkbox/list) to plain text (Notion-style), rather than
+            // spawning another empty sibling.
             const target = outdentTarget(snap, nodeId)
             if (target) {
               focusAfterSync.current = nodeId
               binding.moveNode(nodeId, target.parentId, target.index)
               return true
             }
+            if (current.type !== 'text') {
+              focusAfterSync.current = nodeId
+              binding.changeNodeType(nodeId, 'text')
+              return true
+            }
           }
-          const current = nodeId ? snap.nodes.find((n) => n.id === nodeId) : undefined
-          const currentDepth = (block?.attrs?.depth as number | null) ?? 0
-          // New sibling shares current's depth; at the leftmost, tasks are text (no checkbox).
-          const type = current?.type === 'task' && currentDepth > 0 ? 'task' : 'text'
+          const type = current?.type === 'task' ? 'task' : 'text'
           const { parentId, index } = siblingAfter(snap, nodeId)
           binding.createNode({ type, parentId, index })
           return true // prevent the default split (would duplicate the block's nodeId)

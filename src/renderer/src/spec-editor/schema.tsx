@@ -34,7 +34,6 @@ const TASK_GLYPH: Record<TaskStatus, string> = { todo: '○', 'in-progress': '�
 /** The per-type inner presentation (everything except the shared wrapper + drag handle). */
 function blockInner(
   specType: NodeType,
-  depth: number,
   status: TaskStatus,
   state: DecisionState,
   nodeId: string,
@@ -62,9 +61,7 @@ function blockInner(
       </div>
     )
   }
-  // A task at the leftmost level (no indent) renders as plain text — no checkbox (falls through
-  // below). Checkboxes are for nested to-dos; a top-level item isn't a checklist entry.
-  if (specType === 'task' && depth > 0) {
+  if (specType === 'task') {
     return (
       <div className="flex items-start gap-1.5">
         <span contentEditable={false} className="mt-0.5 shrink-0">
@@ -132,7 +129,7 @@ function SpecBlockView({ node, editor, extension }: NodeViewProps) {
       >
         ⋮
       </span>
-      {blockInner(specType, depth, status, state, nodeId, binding)}
+      {blockInner(specType, status, state, nodeId, binding)}
     </NodeViewWrapper>
   )
 }

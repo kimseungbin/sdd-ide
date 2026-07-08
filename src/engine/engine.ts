@@ -19,6 +19,7 @@ import type {
   Node,
   NodeId,
   NodePatch,
+  NodeType,
   SpecSnapshot,
 } from './types'
 
@@ -34,6 +35,8 @@ export interface SpecEngine {
   // --- mutations (validated) ---
   createNode(input: CreateNodeInput): Node
   updateNode(id: NodeId, patch: NodePatch): Node
+  /** Change a node's type in place (id/title/children/parent preserved); resets type-specific fields. */
+  changeNodeType(id: NodeId, type: NodeType): Node
   moveNode(id: NodeId, newParentId: NodeId | null, index?: number): void
   deleteNode(id: NodeId): void
 
@@ -205,6 +208,45 @@ export function createSpecEngine(snapshot?: SpecSnapshot): SpecEngine {
       if (patch.state !== undefined && node.type === 'deferred-decision') node.state = patch.state
       notify()
       return clone(node)
+    },
+
+    changeNodeType(id, type) {
+      const node = getLive(id)
+      if (node.type === type) return clone(node)
+      const base = {
+        id: node.id,
+        title: node.title,
+        children: [...node.children],
+        parentId: node.parentId,
+      }
+      let next: Node
+      switch (type) {
+        case 'task':
+          next = { ...base, type: 'task', status: 'todo' }
+          break
+        case 'deferred-decision':
+          next = { ...base, type: 'deferred-decision', state: 'open' }
+          break
+        case 'spec':
+          next = { ...base, type: 'spec' }
+          break
+        case 'requirement':
+          next = { ...base, type: 'requirement' }
+          break
+        case 'design':
+          next = { ...base, type: 'design' }
+          break
+        case 'text':
+          next = { ...base, type: 'text' }
+          break
+        default: {
+          const exhaustive: never = type
+          throw new SpecEngineError('INVALID_TYPE', `Unknown node type "${String(exhaustive)}"`)
+        }
+      }
+      nodes.set(id, next)
+      notify()
+      return clone(next)
     },
 
     moveNode(id, newParentId, index) {

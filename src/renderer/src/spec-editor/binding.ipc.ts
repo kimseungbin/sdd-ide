@@ -12,6 +12,7 @@ export function createIpcBinding(): SpecBinding {
     getSnapshot: () => specTreeStore.getSnapshot(),
     subscribe: (listener) => specTreeStore.subscribe(listener),
     updateNode: (id, patch) => void spec.updateNode(id, patch),
+    changeNodeType: (id, type) => void spec.changeNodeType(id, type),
     createNode: (input) => void spec.createNode(input),
     moveNode: (id, newParentId, index) => void spec.moveNode(id, newParentId, index),
     deleteNode: (id) => void spec.deleteNode(id),

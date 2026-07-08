@@ -12,6 +12,7 @@ import {
   type CreateNodeInput,
   type NodeId,
   type NodePatch,
+  type NodeType,
   type SpecEngine,
   type SpecSnapshot,
 } from '../../../engine'
@@ -22,6 +23,7 @@ export interface SpecBinding {
   subscribe(listener: () => void): () => void
   // Writes — validated mutations only (D2). Fire-and-forget; the snapshot re-derives on change.
   updateNode(id: NodeId, patch: NodePatch): void
+  changeNodeType(id: NodeId, type: NodeType): void
   createNode(input: CreateNodeInput): void
   moveNode(id: NodeId, newParentId: NodeId | null, index?: number): void
   deleteNode(id: NodeId): void
@@ -33,6 +35,7 @@ export function createEngineBinding(engine: SpecEngine): SpecBinding {
     getSnapshot: () => engine.toSnapshot(),
     subscribe: (listener) => engine.subscribe(listener),
     updateNode: (id, patch) => void engine.updateNode(id, patch),
+    changeNodeType: (id, type) => void engine.changeNodeType(id, type),
     createNode: (input) => void engine.createNode(input),
     moveNode: (id, newParentId, index) => engine.moveNode(id, newParentId, index),
     deleteNode: (id) => engine.deleteNode(id),

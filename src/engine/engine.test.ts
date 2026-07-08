@@ -120,4 +120,19 @@ describe('createSpecEngine', () => {
     expect(restored.toSnapshot()).toEqual(snapshot)
     expect(restored.getChildren(spec.id).map((n) => n.title)).toEqual(['Stripe'])
   })
+
+  it('changes a node type in place, preserving id/title/children and resetting type fields', () => {
+    const engine = createSpecEngine()
+    const spec = engine.createNode({ type: 'spec', title: 'Root' })
+    const task = engine.createNode({ type: 'task', parentId: spec.id, title: 'Do', status: 'done' })
+    engine.createNode({ type: 'text', parentId: task.id, title: 'child' })
+
+    const changed = engine.changeNodeType(task.id, 'text')
+    expect(changed).toMatchObject({ id: task.id, type: 'text', title: 'Do' })
+    expect('status' in changed).toBe(false) // task-only field dropped
+    expect(engine.getChildren(task.id).map((n) => n.title)).toEqual(['child']) // subtree kept
+
+    const back = engine.changeNodeType(task.id, 'task')
+    expect(back).toMatchObject({ type: 'task', status: 'todo' }) // status reset, not carried
+  })
 })

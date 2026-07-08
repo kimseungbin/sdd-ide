@@ -22,6 +22,7 @@ const api: SddIdeApi = {
       return () => ipcRenderer.removeListener(IPC.specChanged, handler)
     },
     updateNode: (id, patch) => ipcRenderer.invoke(IPC.specUpdateNode, id, patch),
+    changeNodeType: (id, type) => ipcRenderer.invoke(IPC.specChangeNodeType, id, type),
     createNode: (input) => ipcRenderer.invoke(IPC.specCreateNode, input),
     moveNode: (id, newParentId, index) =>
       ipcRenderer.invoke(IPC.specMoveNode, id, newParentId, index),

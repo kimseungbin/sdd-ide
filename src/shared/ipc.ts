@@ -5,7 +5,7 @@
   mutation path (D2); role/session gating over this surface is later work (membrane D7, M5). The
   MCP (BL-050) surface will extend it over time.
 */
-import type { CreateNodeInput, Node, NodeId, NodePatch, SpecSnapshot } from '../engine'
+import type { CreateNodeInput, Node, NodeId, NodePatch, NodeType, SpecSnapshot } from '../engine'
 
 export interface DirEntry {
   name: string
@@ -35,6 +35,7 @@ export interface SddIdeApi {
     onChanged(listener: () => void): () => void
     // Validated mutations — the renderer-side write path (Caller A, D2). Reject on invalid input.
     updateNode(id: NodeId, patch: NodePatch): Promise<Node>
+    changeNodeType(id: NodeId, type: NodeType): Promise<Node>
     createNode(input: CreateNodeInput): Promise<Node>
     moveNode(id: NodeId, newParentId: NodeId | null, index?: number): Promise<void>
     deleteNode(id: NodeId): Promise<void>
@@ -49,6 +50,7 @@ export const IPC = {
   specGetSnapshot: 'spec:getSnapshot',
   specChanged: 'spec:changed',
   specUpdateNode: 'spec:updateNode',
+  specChangeNodeType: 'spec:changeNodeType',
   specCreateNode: 'spec:createNode',
   specMoveNode: 'spec:moveNode',
   specDeleteNode: 'spec:deleteNode',

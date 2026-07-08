@@ -2,7 +2,13 @@ import { BrowserWindow, ipcMain } from 'electron'
 import { readFile, readdir, writeFile } from 'node:fs/promises'
 import { resolve, sep } from 'node:path'
 import { IPC, type DirEntry } from '../shared/ipc'
-import { SpecEngineError, type CreateNodeInput, type NodeId, type NodePatch } from '../engine'
+import {
+  SpecEngineError,
+  type CreateNodeInput,
+  type NodeId,
+  type NodePatch,
+  type NodeType,
+} from '../engine'
 import type { MainSpecStore } from './specStore'
 
 /*
@@ -67,6 +73,9 @@ export function registerSpecIpc(store: MainSpecStore): void {
 
   ipcMain.handle(IPC.specUpdateNode, (_e, id: NodeId, patch: NodePatch) =>
     withEngineErrors(() => store.engine.updateNode(id, patch)),
+  )
+  ipcMain.handle(IPC.specChangeNodeType, (_e, id: NodeId, type: NodeType) =>
+    withEngineErrors(() => store.engine.changeNodeType(id, type)),
   )
   ipcMain.handle(IPC.specCreateNode, (_e, input: CreateNodeInput) =>
     withEngineErrors(() => store.engine.createNode(input)),
