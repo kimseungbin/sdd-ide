@@ -2,6 +2,7 @@ import { BrowserWindow, ipcMain } from 'electron'
 import { readFile, readdir, writeFile } from 'node:fs/promises'
 import { resolve, sep } from 'node:path'
 import { IPC, type DirEntry } from '../shared/ipc'
+import { SpecEngineError, type CreateNodeInput, type NodeId, type NodePatch } from '../engine'
 import type { MainSpecStore } from './specStore'
 
 /*
@@ -45,10 +46,38 @@ export function registerIpcHandlers(): void {
   })
 }
 
-// Read-only spec access for the renderer (the store + engine live in main, D30). Mutations are
-// NOT exposed here — the impl-session workspace is read-only toward the spec (membrane, D7).
+// Spec access for the renderer (the store + engine live in main, D30). Reads are open; writes go
+// through the engine's single validated path (D2, Caller A). The impl-session workspace stays
+// read-only by convention (membrane, D7) — enforcing that per session/role is later work (M5).
+// SpecEngineError is re-thrown with its code in the message so the renderer sees a useful reason
+// (Electron drops custom error fields across IPC).
+function withEngineErrors<T>(fn: () => T): T {
+  try {
+    return fn()
+  } catch (err) {
+    if (err instanceof SpecEngineError) {
+      throw new Error(`${err.code}: ${err.message}`, { cause: err })
+    }
+    throw err
+  }
+}
+
 export function registerSpecIpc(store: MainSpecStore): void {
   ipcMain.handle(IPC.specGetSnapshot, () => store.getSnapshot())
+
+  ipcMain.handle(IPC.specUpdateNode, (_e, id: NodeId, patch: NodePatch) =>
+    withEngineErrors(() => store.engine.updateNode(id, patch)),
+  )
+  ipcMain.handle(IPC.specCreateNode, (_e, input: CreateNodeInput) =>
+    withEngineErrors(() => store.engine.createNode(input)),
+  )
+  ipcMain.handle(IPC.specMoveNode, (_e, id: NodeId, newParentId: NodeId | null, index?: number) =>
+    withEngineErrors(() => store.engine.moveNode(id, newParentId, index)),
+  )
+  ipcMain.handle(IPC.specDeleteNode, (_e, id: NodeId) =>
+    withEngineErrors(() => store.engine.deleteNode(id)),
+  )
+
   store.subscribe(() => {
     for (const win of BrowserWindow.getAllWindows()) win.webContents.send(IPC.specChanged)
   })

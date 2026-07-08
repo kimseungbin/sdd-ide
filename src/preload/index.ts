@@ -2,8 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { IPC, type SddIdeApi } from '../shared/ipc'
 
 // Minimal, safe bridge (contextIsolation + sandbox): the renderer gets only these typed
-// operations — never direct Node/fs access. The spec-engine (BL-011) and MCP-parity
-// operations (BL-050) are exposed here later.
+// operations — never direct Node/fs access. Spec reads + validated writes (D2) are here;
+// MCP-parity operations (BL-050) are exposed later.
 const api: SddIdeApi = {
   versions: process.versions,
   workspace: {
@@ -21,6 +21,11 @@ const api: SddIdeApi = {
       ipcRenderer.on(IPC.specChanged, handler)
       return () => ipcRenderer.removeListener(IPC.specChanged, handler)
     },
+    updateNode: (id, patch) => ipcRenderer.invoke(IPC.specUpdateNode, id, patch),
+    createNode: (input) => ipcRenderer.invoke(IPC.specCreateNode, input),
+    moveNode: (id, newParentId, index) =>
+      ipcRenderer.invoke(IPC.specMoveNode, id, newParentId, index),
+    deleteNode: (id) => ipcRenderer.invoke(IPC.specDeleteNode, id),
   },
 }
 

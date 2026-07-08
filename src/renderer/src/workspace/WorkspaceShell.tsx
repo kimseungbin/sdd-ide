@@ -30,7 +30,7 @@ function Handle() {
 
 export function WorkspaceShell() {
   return (
-    <div className="h-screen bg-base p-2">
+    <div className="h-full bg-base p-2">
       <PanelGroup direction="horizontal" autoSaveId="sdd-workspace-v2" className="h-full">
         <ResizablePanel id="agent" order={1} defaultSize={40} minSize={20}>
           <Panel title="Agent" padding="none">
