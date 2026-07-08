@@ -1,7 +1,7 @@
 ---
 id: BL-030
 title: "Editor adapter: doc model as store projection"
-status: in-review
+status: done
 type: feature
 priority: high
 milestone: M3
@@ -26,8 +26,8 @@ differentiation is the data model + context management, not a text-editing engin
       all through the `SpecBinding` (D2). App backing writes over the new mutation IPC seam.
 - [x] Editor state is reconstructable from the store (projection, not truth) — doc is derived
       from the snapshot and rebuilt on structural change (`structuralSignature`); tested.
-- [ ] Korean IME composition verified in the **real** integration (not just the spike) — pending
-      human check in the app's Spec-authoring view + the Ladle story (`SpecEditor.stories`).
+- [x] Korean IME composition verified in the **real** integration (not just the spike) —
+      confirmed typing 한글 into block titles in the app, composition holds mid-caret-move.
 
 ## Implementation notes
 
