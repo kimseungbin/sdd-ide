@@ -39,9 +39,19 @@ const highlight = HighlightStyle.define([
   { tag: [t.keyword, t.modifier, t.controlKeyword, t.operatorKeyword], color: 'var(--cm-keyword)' },
   { tag: [t.string, t.special(t.string), t.regexp], color: 'var(--cm-string)' },
   { tag: [t.number, t.bool, t.null, t.atom], color: 'var(--cm-number)' },
-  { tag: [t.lineComment, t.blockComment, t.docComment], color: 'var(--cm-comment)', fontStyle: 'italic' },
-  { tag: [t.function(t.variableName), t.function(t.propertyName), t.labelName], color: 'var(--cm-function)' },
-  { tag: [t.typeName, t.className, t.namespace, t.definition(t.typeName)], color: 'var(--cm-type)' },
+  {
+    tag: [t.lineComment, t.blockComment, t.docComment],
+    color: 'var(--cm-comment)',
+    fontStyle: 'italic',
+  },
+  {
+    tag: [t.function(t.variableName), t.function(t.propertyName), t.labelName],
+    color: 'var(--cm-function)',
+  },
+  {
+    tag: [t.typeName, t.className, t.namespace, t.definition(t.typeName)],
+    color: 'var(--cm-type)',
+  },
   { tag: [t.propertyName, t.attributeName], color: 'var(--cm-property)' },
   { tag: [t.tagName, t.angleBracket], color: 'var(--cm-tag)' },
   { tag: [t.meta, t.documentMeta, t.processingInstruction], color: 'var(--cm-comment)' },

@@ -1,0 +1,37 @@
+name: CI
+
+# Mirrors the local git hooks (BL-003): the same format / lint / typecheck / test gate, run on
+# every push to main and every PR. Node comes from .nvmrc so CI, the hooks, and dev all agree —
+# important because the spec store uses node:sqlite (DatabaseSync), stable only on Node >= 24.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Format (Prettier)
+        run: npm run format:check
+
+      - name: Lint (oxlint + eslint)
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build

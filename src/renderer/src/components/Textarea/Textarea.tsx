@@ -16,8 +16,10 @@ const textareaStyles = cva(
   'w-full resize-none rounded-md border border-border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
 )
 
-export interface TextareaProps
-  extends Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, 'className' | 'style' | 'onSubmit'> {
+export interface TextareaProps extends Omit<
+  TextareaHTMLAttributes<HTMLTextAreaElement>,
+  'className' | 'style' | 'onSubmit'
+> {
   /** Fired on Enter (without Shift) when NOT composing — Korean-IME safe. */
   onSubmit?: () => void
 }

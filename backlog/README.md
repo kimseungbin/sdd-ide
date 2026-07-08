@@ -49,7 +49,7 @@ _Resolve the open questions that gate architecture choices before committing._
 |----|-------|------|------|--------|-----------|
 | [BL-001](./items/BL-001-electron-shell-scaffold.md) | Electron app shell scaffold | infra | high | done | D21 |
 | [BL-002](./items/BL-002-block-editor-spike.md) | Block editor spike: Slate/Plate vs Tiptap | spike | critical | backlog | D18 |
-| [BL-003](./items/BL-003-dev-ci-pipeline.md) | Dev CI pipeline (GitHub Actions) | infra | medium | backlog | — |
+| [BL-003](./items/BL-003-dev-ci-pipeline.md) | Dev CI pipeline (GitHub Actions) | infra | medium | done | — |
 
 ### M1 — Spec engine core (the load-bearing layer)
 _Typed store + single validated mutation path. Nothing else is real without this._

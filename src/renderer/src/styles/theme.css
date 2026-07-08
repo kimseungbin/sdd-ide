@@ -57,5 +57,8 @@ body {
   background: var(--color-base);
   color: var(--color-fg);
   color-scheme: dark;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
 }

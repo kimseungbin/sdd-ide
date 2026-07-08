@@ -7,6 +7,9 @@
   "main": "./out/main/index.js",
   "author": "SeungBin Kim",
   "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
@@ -16,15 +19,21 @@
     "lint": "oxlint && eslint .",
     "lint:oxlint": "oxlint",
     "lint:eslint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "vitest run",
     "test:watch": "vitest",
     "ladle": "ladle serve",
     "ladle:build": "ladle build",
-    "package": "electron-vite build && electron-builder"
+    "package": "electron-vite build && electron-builder",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "devDependencies": {
     "@ladle/react": "^5.1.1",
     "@tailwindcss/vite": "^4.3.2",
+    "@tiptap/pm": "^3.27.3",
+    "@tiptap/react": "^3.27.3",
+    "@tiptap/starter-kit": "^3.27.3",
     "@types/node": "^26.1.0",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
@@ -35,6 +44,11 @@
     "electron-vite": "^5.0.0",
     "eslint": "^10.6.0",
     "oxlint": "^1.73.0",
+    "prettier": "^3.9.4",
+    "slate": "^0.124.1",
+    "slate-dom": "^0.124.1",
+    "slate-history": "^0.113.1",
+    "slate-react": "^0.125.1",
     "tailwindcss": "^4.3.2",
     "typescript": "^6.0.3",
     "vite": "^7.3.6",

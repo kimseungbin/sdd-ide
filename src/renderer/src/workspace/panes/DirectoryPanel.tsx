@@ -49,7 +49,10 @@ export function DirectoryPanel() {
   const [childrenByPath, setChildrenByPath] = useState<Record<string, DirEntry[]>>({})
   const [focusedPath, setFocusedPath] = useState<string | null>(null)
 
-  const rows = useMemo(() => buildRows(roots, expanded, childrenByPath), [roots, expanded, childrenByPath])
+  const rows = useMemo(
+    () => buildRows(roots, expanded, childrenByPath),
+    [roots, expanded, childrenByPath],
+  )
 
   const loadChildren = useCallback((path: string): void => {
     window.sddIde.fs
@@ -81,7 +84,13 @@ export function DirectoryPanel() {
   }, [])
 
   const treeRows: TreeRow[] = useMemo(
-    () => rows.map((row) => ({ id: row.entry.path, isExpandable: row.entry.isDirectory, open: row.open, parentId: row.parentPath })),
+    () =>
+      rows.map((row) => ({
+        id: row.entry.path,
+        isExpandable: row.entry.isDirectory,
+        open: row.open,
+        parentId: row.parentPath,
+      })),
     [rows],
   )
   const { onKeyDown, registerRow, tabIndexFor } = useTreeKeyboard({
@@ -125,7 +134,12 @@ export function DirectoryPanel() {
   if (roots.length === 0) return <p className="text-sm text-muted">Empty project.</p>
 
   return (
-    <div role="tree" aria-label="Project files" className="flex flex-col gap-0.5" onKeyDown={onKeyDown}>
+    <div
+      role="tree"
+      aria-label="Project files"
+      className="flex flex-col gap-0.5"
+      onKeyDown={onKeyDown}
+    >
       {rows.map((row) => (
         <TreeItem
           key={row.entry.path}

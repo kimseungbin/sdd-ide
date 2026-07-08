@@ -30,7 +30,13 @@ export interface TreeKeyboard {
   tabIndexFor: (id: string) => number
 }
 
-export function useTreeKeyboard({ rows, focusedId, setFocusedId, expand, collapse }: Params): TreeKeyboard {
+export function useTreeKeyboard({
+  rows,
+  focusedId,
+  setFocusedId,
+  expand,
+  collapse,
+}: Params): TreeKeyboard {
   const refs = useRef(new Map<string, HTMLDivElement>())
 
   const registerRow = useCallback((id: string, el: HTMLDivElement | null): void => {
@@ -74,7 +80,8 @@ export function useTreeKeyboard({ rows, focusedId, setFocusedId, expand, collaps
           event.preventDefault()
           if (!row.isExpandable) break
           if (!row.open) expand(row.id)
-          else if (index < rows.length - 1 && rows[index + 1].parentId === row.id) moveFocus(rows[index + 1].id)
+          else if (index < rows.length - 1 && rows[index + 1].parentId === row.id)
+            moveFocus(rows[index + 1].id)
           break
         case 'ArrowLeft':
           event.preventDefault()

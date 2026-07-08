@@ -44,7 +44,11 @@ export const agentStore = {
     messages = [
       ...messages,
       { id: `m${nextId++}`, role: 'user', text: trimmed },
-      { id: `m${nextId++}`, role: 'system', text: 'Not connected to a provider yet — see BL-050 / BL-051 / BL-052 (M5).' },
+      {
+        id: `m${nextId++}`,
+        role: 'system',
+        text: 'Not connected to a provider yet — see BL-050 / BL-051 / BL-052 (M5).',
+      },
     ]
     notify()
   },

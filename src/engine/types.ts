@@ -52,12 +52,7 @@ export interface TextNode extends BaseNode {
 }
 
 export type Node =
-  | SpecNode
-  | RequirementNode
-  | DesignNode
-  | TaskNode
-  | DeferredDecisionNode
-  | TextNode
+  SpecNode | RequirementNode | DesignNode | TaskNode | DeferredDecisionNode | TextNode
 
 /** Input to createNode. Type-specific fields are optional and validated per type. */
 export interface CreateNodeInput {

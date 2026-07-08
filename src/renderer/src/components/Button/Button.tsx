@@ -41,7 +41,8 @@ const button = cva(
 // Public prop vocabulary (CLAUDE.md Rule 7). Native button attributes are allowed
 // EXCEPT className/style — those are removed so styling can only flow through variants.
 export interface ButtonProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'style'>,
+  extends
+    Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'style'>,
     VariantProps<typeof button> {
   /** Render as the child element (e.g. an anchor) while keeping Button styling. */
   asChild?: boolean

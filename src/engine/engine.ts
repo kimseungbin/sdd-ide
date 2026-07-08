@@ -189,10 +189,16 @@ export function createSpecEngine(snapshot?: SpecSnapshot): SpecEngine {
     updateNode(id, patch) {
       const node = getLive(id)
       if (patch.status !== undefined && node.type !== 'task') {
-        throw new SpecEngineError('INVALID_PATCH', `status applies only to task nodes, not "${node.type}"`)
+        throw new SpecEngineError(
+          'INVALID_PATCH',
+          `status applies only to task nodes, not "${node.type}"`,
+        )
       }
       if (patch.state !== undefined && node.type !== 'deferred-decision') {
-        throw new SpecEngineError('INVALID_PATCH', `state applies only to deferred-decision nodes, not "${node.type}"`)
+        throw new SpecEngineError(
+          'INVALID_PATCH',
+          `state applies only to deferred-decision nodes, not "${node.type}"`,
+        )
       }
       if (patch.title !== undefined) node.title = patch.title
       if (patch.status !== undefined && node.type === 'task') node.status = patch.status
@@ -209,7 +215,10 @@ export function createSpecEngine(snapshot?: SpecSnapshot): SpecEngine {
         let cursor: NodeId | null = newParentId
         while (cursor !== null) {
           if (cursor === id) {
-            throw new SpecEngineError('CYCLE', 'A node cannot be moved into itself or its own descendant')
+            throw new SpecEngineError(
+              'CYCLE',
+              'A node cannot be moved into itself or its own descendant',
+            )
           }
           cursor = nodes.get(cursor)?.parentId ?? null
         }
@@ -240,12 +249,18 @@ export function createSpecEngine(snapshot?: SpecSnapshot): SpecEngine {
       }
       for (const e of edges.values()) {
         if (e.from === from && e.to === to && e.type === type) {
-          throw new SpecEngineError('DUPLICATE_EDGE', `A ${type} edge from "${from}" to "${to}" already exists`)
+          throw new SpecEngineError(
+            'DUPLICATE_EDGE',
+            `A ${type} edge from "${from}" to "${to}" already exists`,
+          )
         }
       }
       // Hard-edge cycles are deadlocks — reject at write time (BL-014/D24). Soft cycles are allowed.
       if (isHardEdge(type) && (to === from || hardReachableFrom(to).has(from))) {
-        throw new SpecEngineError('CYCLE', `A ${type} edge from "${from}" to "${to}" would create a hard-dependency cycle`)
+        throw new SpecEngineError(
+          'CYCLE',
+          `A ${type} edge from "${from}" to "${to}" would create a hard-dependency cycle`,
+        )
       }
       const edge: Edge = { id: createEdgeId(type), from, to, type }
       edges.set(edge.id, edge)

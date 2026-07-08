@@ -21,9 +21,7 @@ export const Disabled: Story = () => <Button disabled>Disabled</Button>
 
 // Playground documents the full prop vocabulary (CLAUDE.md Rule 7): every knob
 // is a control, and there is no free-form styling input — only the closed variants.
-export const Playground: Story<ButtonProps & { children: string }> = (args) => (
-  <Button {...args} />
-)
+export const Playground: Story<ButtonProps & { children: string }> = (args) => <Button {...args} />
 Playground.args = {
   children: 'Click me',
   variant: 'primary',

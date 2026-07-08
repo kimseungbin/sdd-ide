@@ -77,8 +77,12 @@ function rowToNode(row: NodeRow, children: NodeId[]): Node {
 }
 
 function loadSnapshot(db: DatabaseSync): SpecSnapshot {
-  const nodeRows = db.prepare('SELECT id, type, title, parent_id, ord, status, state FROM nodes').all() as unknown as NodeRow[]
-  const edgeRows = db.prepare('SELECT id, from_id, to_id, type FROM edges').all() as unknown as EdgeRow[]
+  const nodeRows = db
+    .prepare('SELECT id, type, title, parent_id, ord, status, state FROM nodes')
+    .all() as unknown as NodeRow[]
+  const edgeRows = db
+    .prepare('SELECT id, from_id, to_id, type FROM edges')
+    .all() as unknown as EdgeRow[]
 
   // Group child ids by parent, ordered by `ord` (null parent = roots).
   const byParent = new Map<string | null, { id: string; ord: number }[]>()
@@ -88,10 +92,16 @@ function loadSnapshot(db: DatabaseSync): SpecSnapshot {
     byParent.set(row.parent_id, list)
   }
   for (const list of byParent.values()) list.sort((a, b) => a.ord - b.ord)
-  const orderedChildren = (parent: string | null): NodeId[] => (byParent.get(parent) ?? []).map((c) => c.id)
+  const orderedChildren = (parent: string | null): NodeId[] =>
+    (byParent.get(parent) ?? []).map((c) => c.id)
 
   const nodes = nodeRows.map((row) => rowToNode(row, orderedChildren(row.id)))
-  const edges: Edge[] = edgeRows.map((row) => ({ id: row.id, from: row.from_id, to: row.to_id, type: row.type as Edge['type'] }))
+  const edges: Edge[] = edgeRows.map((row) => ({
+    id: row.id,
+    from: row.from_id,
+    to: row.to_id,
+    type: row.type as Edge['type'],
+  }))
   return { version: 1, rootIds: orderedChildren(null), nodes, edges }
 }
 
@@ -101,7 +111,9 @@ function persist(db: DatabaseSync, snapshot: SpecSnapshot): void {
   snapshot.rootIds.forEach((id, i) => ordById.set(id, i))
   for (const node of snapshot.nodes) node.children.forEach((childId, i) => ordById.set(childId, i))
 
-  const insertNode = db.prepare('INSERT INTO nodes (id, type, title, parent_id, ord, status, state) VALUES (?, ?, ?, ?, ?, ?, ?)')
+  const insertNode = db.prepare(
+    'INSERT INTO nodes (id, type, title, parent_id, ord, status, state) VALUES (?, ?, ?, ?, ?, ?, ?)',
+  )
   const insertEdge = db.prepare('INSERT INTO edges (id, from_id, to_id, type) VALUES (?, ?, ?, ?)')
 
   db.exec('BEGIN')
@@ -172,10 +184,18 @@ export function seedDemoSpec(engine: SpecEngine): void {
     engine.createNode({ type: 'task', title, parentId, status })
   }
 
-  const shell = engine.createNode({ type: 'requirement', title: 'Four-pane workspace shell', parentId: spec.id })
+  const shell = engine.createNode({
+    type: 'requirement',
+    title: 'Four-pane workspace shell',
+    parentId: spec.id,
+  })
   task('Layout skeleton + Panel primitive', shell.id, 'done')
 
-  const panes = engine.createNode({ type: 'design', title: 'Store-driven panes', parentId: spec.id })
+  const panes = engine.createNode({
+    type: 'design',
+    title: 'Store-driven panes',
+    parentId: spec.id,
+  })
   task('Directory tree + keyboard nav', panes.id, 'done')
   task('Read-first code editor', panes.id, 'done')
   task('Spec drill-down tree', panes.id, 'done')

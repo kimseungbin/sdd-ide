@@ -1,0 +1,12 @@
+# Build output & deps
+node_modules
+out
+dist
+build
+
+# Generated / not ours to format
+package-lock.json
+
+# Hand-authored prose with intentional layout (tables, wrapping) — formatted by review, not
+# Prettier: the design docs and the dogfooded backlog.
+**/*.md

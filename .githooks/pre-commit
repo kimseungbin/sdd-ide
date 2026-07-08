@@ -1,0 +1,21 @@
+#!/bin/sh
+# Pre-commit gate (BL-003). Fast checks that mirror CI — formatting, lint, types — all of which
+# run in well under a second here. The full test suite runs on pre-push (slower, less frequent).
+# Wired via `core.hooksPath .githooks`, set by the npm `prepare` script on install.
+set -e
+
+run() {
+  label=$1
+  shift
+  printf '\033[36m▸ %s\033[0m\n' "$label"
+  if ! "$@"; then
+    printf '\033[31m✗ pre-commit failed at: %s\033[0m\n' "$label"
+    printf '  Fix the above (\033[36mnpm run format\033[0m auto-fixes style), then re-commit.\n'
+    exit 1
+  fi
+}
+
+run "format" npm run --silent format:check
+run "lint" npm run --silent lint
+run "typecheck" npm run --silent typecheck
+printf '\033[32m✓ pre-commit passed\033[0m\n'

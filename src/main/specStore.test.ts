@@ -25,7 +25,8 @@ describe('openSpecStore (node:sqlite persistence)', () => {
     expect(after.rootIds).toEqual(before.rootIds)
     expect(after.nodes.length).toBe(before.nodes.length)
     // Containment survives: same children, in the same order.
-    const childrenById = (s: typeof after) => Object.fromEntries(s.nodes.map((n) => [n.id, n.children]))
+    const childrenById = (s: typeof after) =>
+      Object.fromEntries(s.nodes.map((n) => [n.id, n.children]))
     expect(childrenById(after)).toEqual(childrenById(before))
   })
 

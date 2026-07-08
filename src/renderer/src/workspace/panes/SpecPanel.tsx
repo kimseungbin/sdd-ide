@@ -28,7 +28,11 @@ interface SpecRow {
   setSize: number
 }
 
-function buildRows(rootIds: NodeId[], byId: Map<NodeId, Node>, expanded: ReadonlySet<string>): SpecRow[] {
+function buildRows(
+  rootIds: NodeId[],
+  byId: Map<NodeId, Node>,
+  expanded: ReadonlySet<string>,
+): SpecRow[] {
   const rows: SpecRow[] = []
   const walk = (ids: NodeId[], depth: number, parentId: NodeId | null): void => {
     ids.forEach((id, index) => {
@@ -36,7 +40,15 @@ function buildRows(rootIds: NodeId[], byId: Map<NodeId, Node>, expanded: Readonl
       if (!node) return
       const expandable = node.children.length > 0
       const open = expandable && expanded.has(id)
-      rows.push({ node, depth, parentId, open, expandable, posInSet: index + 1, setSize: ids.length })
+      rows.push({
+        node,
+        depth,
+        parentId,
+        open,
+        expandable,
+        posInSet: index + 1,
+        setSize: ids.length,
+      })
       if (open) walk(node.children, depth + 1, id)
     })
   }
@@ -47,7 +59,10 @@ function buildRows(rootIds: NodeId[], byId: Map<NodeId, Node>, expanded: Readonl
 export function SpecPanel() {
   const snapshot = useSpecTree()
   const rootIds = useMemo(() => snapshot?.rootIds ?? [], [snapshot])
-  const byId = useMemo(() => new Map((snapshot?.nodes ?? []).map((node) => [node.id, node])), [snapshot])
+  const byId = useMemo(
+    () => new Map((snapshot?.nodes ?? []).map((node) => [node.id, node])),
+    [snapshot],
+  )
 
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set())
   const [focusedId, setFocusedId] = useState<NodeId | null>(null)
@@ -83,10 +98,22 @@ export function SpecPanel() {
   }, [])
 
   const treeRows: TreeRow[] = useMemo(
-    () => rows.map((row) => ({ id: row.node.id, isExpandable: row.expandable, open: row.open, parentId: row.parentId })),
+    () =>
+      rows.map((row) => ({
+        id: row.node.id,
+        isExpandable: row.expandable,
+        open: row.open,
+        parentId: row.parentId,
+      })),
     [rows],
   )
-  const { onKeyDown, registerRow, tabIndexFor } = useTreeKeyboard({ rows: treeRows, focusedId, setFocusedId, expand, collapse })
+  const { onKeyDown, registerRow, tabIndexFor } = useTreeKeyboard({
+    rows: treeRows,
+    focusedId,
+    setFocusedId,
+    expand,
+    collapse,
+  })
 
   if (snapshot === null) return <p className="text-sm text-muted">Loading…</p>
   if (rootIds.length === 0) return <p className="text-sm text-muted">No spec loaded.</p>
@@ -120,7 +147,13 @@ export function SpecPanel() {
           ) : (
             <span aria-hidden className="w-3 shrink-0" />
           )}
-          <span className={row.node.type === 'task' && row.node.status === 'done' ? 'text-muted line-through' : undefined}>
+          <span
+            className={
+              row.node.type === 'task' && row.node.status === 'done'
+                ? 'text-muted line-through'
+                : undefined
+            }
+          >
             {row.node.title || '(untitled)'}
           </span>
           {row.node.type === 'task' && (
