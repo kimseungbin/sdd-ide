@@ -62,7 +62,7 @@ _Typed store + single validated mutation path. Nothing else is real without this
 | [BL-013](./items/BL-013-dependency-graph-model.md) | Dependency graph + edge taxonomy | feature | high | done | D5, D9 |
 | [BL-014](./items/BL-014-write-time-cycle-checks.md) | Write-time cycle checks | feature | medium | done | D24 |
 | [BL-015](./items/BL-015-triad-templates-in-store.md) | Default triad + editable templates in store | feature | medium | backlog | D17 |
-| [BL-016](./items/BL-016-wire-engine-into-app.md) | Wire spec engine into the app (Caller A) | feature | high | backlog | D2 |
+| [BL-016](./items/BL-016-wire-engine-into-app.md) | Wire spec engine into the app (Caller A) | feature | high | done | D2 |
 
 ### M2 — Persistence (external local store)
 _The structured store IS the durable record, persisted to a local SQLite DB (D30). No Git projection._
@@ -78,13 +78,13 @@ _Adopt an editor via adapter; its doc model is a projection of the store._
 
 | ID | Title | type | prio | status | decisions |
 |----|-------|------|------|--------|-----------|
-| [BL-033](./items/BL-033-react-ui-foundation.md) | React UI foundation & component system | feature | high | in-progress | D18, D21 |
+| [BL-033](./items/BL-033-react-ui-foundation.md) | React UI foundation & component system | feature | high | done | D18, D21 |
 | [BL-034](./items/BL-034-component-workshop-ladle.md) | Component workshop & docs (Ladle) | infra | medium | done | D18 |
-| [BL-035](./items/BL-035-impl-session-workspace-shell.md) | Implementation-session workspace shell (resizable panes) | feature | high | in-progress | D7, D20, D21 |
-| [BL-036](./items/BL-036-directory-file-tree.md) | Directory panel (repo file tree) | feature | high | in-progress | D21 |
-| [BL-037](./items/BL-037-read-first-code-editor.md) | Read-first code editor (CodeMirror 6) | feature | high | in-progress | D20, D21, D31 |
-| [BL-038](./items/BL-038-spec-task-projection-panel.md) | Spec/task projection panel (read-only) | feature | high | in-progress | D1, D7, D30 |
-| [BL-039](./items/BL-039-agent-surface.md) | Agent surface (chat skeleton) | feature | high | in-progress | D7, D8 |
+| [BL-035](./items/BL-035-impl-session-workspace-shell.md) | Implementation-session workspace shell (resizable panes) | feature | high | done | D7, D20, D21 |
+| [BL-036](./items/BL-036-directory-file-tree.md) | Directory panel (repo file tree) | feature | high | done | D21 |
+| [BL-037](./items/BL-037-read-first-code-editor.md) | Read-first code editor (CodeMirror 6) | feature | high | done | D20, D21, D31 |
+| [BL-038](./items/BL-038-spec-task-projection-panel.md) | Spec/task projection panel (read-only) | feature | high | done | D1, D7, D30 |
+| [BL-039](./items/BL-039-agent-surface.md) | Agent surface (chat skeleton) | feature | high | done | D7, D8 |
 | [BL-030](./items/BL-030-editor-adapter.md) | Editor adapter: doc model as store projection | feature | high | backlog | D18, D2 |
 | [BL-031](./items/BL-031-containment-editing-ux.md) | Containment editing UX (nesting, drag-drop) | feature | medium | backlog | D5 |
 | [BL-032](./items/BL-032-custom-block-types.md) | Custom block types incl. deferred-decision node | feature | medium | backlog | D6, D17 |

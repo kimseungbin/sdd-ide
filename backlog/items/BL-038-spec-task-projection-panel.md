@@ -1,7 +1,7 @@
 ---
 id: BL-038
 title: Spec/task projection panel (read-only)
-status: in-progress
+status: done
 type: feature
 priority: high
 milestone: M3

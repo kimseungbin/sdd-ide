@@ -22,7 +22,8 @@ convention inside `- [ ]` lines.
 - [x] Every node carries a globally unique, stable ID at creation (`src/engine/ids.ts`:
       `createNodeId`/`createEdgeId` — minimal UUID-based scheme)
 - [x] IDs are the anchor for dependency edges ([[BL-013]]) — done
-- [ ] IDs persist as SQLite primary keys and survive move/reorder/rename ([[BL-020]])
+- [x] IDs persist as SQLite primary keys and survive move/reorder/rename — done via [[BL-020]]
+      (`nodes.id` / `edges.id` PKs; `ord` column carries order independent of ID).
 - [ ] IDs are the reference target from Git commits/PRs to spec nodes (traceability, [[BL-062]])
 
 ## Notes / open questions

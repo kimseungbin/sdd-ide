@@ -1,7 +1,7 @@
 ---
 id: BL-033
 title: React UI foundation & component system
-status: in-progress
+status: done
 type: feature
 priority: high
 milestone: M3

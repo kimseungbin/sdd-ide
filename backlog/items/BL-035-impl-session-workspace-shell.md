@@ -1,7 +1,7 @@
 ---
 id: BL-035
 title: Implementation-session workspace shell (resizable panes)
-status: in-progress
+status: done
 type: feature
 priority: high
 milestone: M3

@@ -1,7 +1,7 @@
 ---
 id: BL-022
 title: Local store lifecycle (open / load / migrations)
-status: backlog
+status: in-progress
 type: feature
 priority: high
 milestone: M2

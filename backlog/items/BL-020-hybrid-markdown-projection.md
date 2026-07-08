@@ -1,7 +1,7 @@
 ---
 id: BL-020
 title: SQLite store — schema + persistence (load / write-through)
-status: backlog
+status: in-progress
 type: feature
 priority: high
 milestone: M2

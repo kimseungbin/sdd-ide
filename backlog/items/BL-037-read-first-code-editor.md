@@ -1,7 +1,7 @@
 ---
 id: BL-037
 title: Read-first code editor (CodeMirror 6)
-status: in-progress
+status: done
 type: feature
 priority: high
 milestone: M3

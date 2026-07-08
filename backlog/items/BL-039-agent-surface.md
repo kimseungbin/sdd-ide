@@ -1,7 +1,7 @@
 ---
 id: BL-039
 title: Agent surface (chat skeleton)
-status: in-progress
+status: done
 type: feature
 priority: high
 milestone: M3

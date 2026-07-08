@@ -1,7 +1,7 @@
 ---
 id: BL-036
 title: Directory panel (repo file tree)
-status: in-progress
+status: done
 type: feature
 priority: high
 milestone: M3
