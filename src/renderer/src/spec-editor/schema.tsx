@@ -1,4 +1,4 @@
-import { useState, type DragEvent, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { Node, mergeAttributes } from '@tiptap/core'
 import {
   NodeViewContent,
@@ -11,8 +11,7 @@ import { Button } from '../components/Button'
 import type { DecisionState, NodeType, TaskStatus } from '../../../engine'
 import type { SpecBinding } from './binding'
 import { createSlashCommand } from './slash-command'
-import { dropMove } from './structural'
-import { drag } from './drag'
+import { startBlockDrag } from './drag'
 import './spec-editor.css'
 
 /*
@@ -111,58 +110,17 @@ function SpecBlockView({ node, extension }: NodeViewProps) {
   const depth = (node.attrs.depth as number | null) ?? 0
   const status = (node.attrs.status as TaskStatus | null) ?? 'todo'
   const state = (node.attrs.state as DecisionState | null) ?? 'open'
-  const [dropSide, setDropSide] = useState<'before' | 'after' | null>(null)
-
-  const sideFrom = (event: DragEvent<HTMLElement>): 'before' | 'after' => {
-    const rect = event.currentTarget.getBoundingClientRect()
-    return event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
-  }
-
-  const onDragOver = (event: DragEvent<HTMLElement>): void => {
-    const dragged = drag.get()
-    if (!dragged || dragged === nodeId) return
-    event.preventDefault()
-    event.stopPropagation()
-    setDropSide(sideFrom(event))
-  }
-
-  const onDrop = (event: DragEvent<HTMLElement>): void => {
-    const dragged = drag.get()
-    setDropSide(null)
-    if (!dragged || dragged === nodeId) return
-    event.preventDefault()
-    event.stopPropagation()
-    const snapshot = binding.getSnapshot()
-    if (!snapshot) return
-    const move = dropMove(snapshot, dragged, nodeId, sideFrom(event))
-    if (move) binding.moveNode(dragged, move.parentId, move.index)
-    drag.end()
-  }
-
-  const dropClass =
-    dropSide === 'before' ? ' drop-before' : dropSide === 'after' ? ' drop-after' : ''
 
   return (
-    <NodeViewWrapper
-      data-depth={depth}
-      className={`spec-block group relative${dropClass}`}
-      onDragOver={onDragOver}
-      onDragLeave={() => setDropSide(null)}
-      onDrop={onDrop}
-    >
+    <NodeViewWrapper data-node-id={nodeId} data-depth={depth} className="spec-block group relative">
       <span
         aria-hidden
         contentEditable={false}
-        draggable
-        onDragStart={(event) => {
-          drag.start(nodeId)
-          event.dataTransfer.effectAllowed = 'move'
-          event.dataTransfer.setData('text/plain', nodeId)
+        // Pointer-based drag (see drag.ts) — grip starts it; the controller hit-tests + moves.
+        onPointerDown={(event) => {
+          event.preventDefault()
           event.stopPropagation()
-        }}
-        onDragEnd={() => {
-          drag.end()
-          setDropSide(null)
+          startBlockDrag(nodeId, binding)
         }}
         className="absolute -left-4 top-0.5 hidden cursor-grab select-none text-muted group-hover:block"
       >
