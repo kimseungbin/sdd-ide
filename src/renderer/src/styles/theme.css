@@ -7,14 +7,15 @@
   hex/px values.
 
   Palette: JetBrains/Darcula dark, integrated with the code editor (--cm-* below).
-  Two-tone like JetBrains — panels (--color-surface #3c3f41) sit a touch lighter than
-  the app base (--color-base #2b2b2b), which matches the editor background.
+  Two-tone dark — panels (--color-surface #2b2b2b) are the darker tone, matching the editor
+  background (--cm-bg), so text sits on the darker surface for higher contrast; the app base /
+  gutters (--color-base #3c3f41) sit a touch lighter and frame the panels.
 */
 @theme {
-  --color-base: #2b2b2b;
-  --color-surface: #3c3f41;
+  --color-base: #3c3f41;
+  --color-surface: #2b2b2b;
   --color-fg: #bbbbbb;
-  --color-muted: #808080;
+  --color-muted: #a0a0a0;
   --color-border: #4b4b4b;
   --color-brand: #3592c4;
   --color-brand-fg: #ffffff;
