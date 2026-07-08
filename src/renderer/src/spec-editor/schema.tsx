@@ -122,7 +122,7 @@ function SpecBlockView({ node, editor, extension }: NodeViewProps) {
           event.stopPropagation()
           startBlockDrag(nodeId, editor, binding)
         }}
-        className="absolute left-0 top-0 flex h-full w-4 cursor-grab select-none items-start justify-center pt-0.5 text-sm leading-none text-muted/60 transition-colors hover:text-fg"
+        className="spec-grip absolute left-0 top-0 flex h-full w-4 cursor-grab select-none items-center justify-center leading-none text-muted"
       >
         ⋮
       </span>
