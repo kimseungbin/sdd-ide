@@ -83,7 +83,7 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
         if (event.key === 'Enter' && !event.shiftKey) {
           const current = nodeId ? snap.nodes.find((n) => n.id === nodeId) : undefined
           const empty = (block?.content.size ?? 0) === 0
-          if (nodeId && current && empty) {
+          if (nodeId && empty) {
             // Empty + nested → climb out (outdent). Once it can't climb further, one more Enter
             // strips the block type (checkbox/list) to plain text (Notion-style), rather than
             // spawning another empty sibling.
@@ -93,7 +93,7 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
               binding.moveNode(nodeId, target.parentId, target.index)
               return true
             }
-            if (current.type !== 'text') {
+            if (current && current.type !== 'text') {
               focusAfterSync.current = nodeId
               binding.changeNodeType(nodeId, 'text')
               return true
