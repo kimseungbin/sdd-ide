@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import type { Editor } from '@tiptap/core'
-import type { NodeId, SpecSnapshot } from '../../../engine'
+import type { NodeId, NodeType, SpecSnapshot } from '../../../engine'
 import { createSpecExtensions } from './schema'
 import { snapshotToDoc, structuralSignature } from './projection'
 import { indentTarget, outdentTarget, previousBlockId, siblingAfter } from './structural'
@@ -81,25 +81,29 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
         }
 
         if (event.key === 'Enter' && !event.shiftKey) {
-          const current = nodeId ? snap.nodes.find((n) => n.id === nodeId) : undefined
           const empty = (block?.content.size ?? 0) === 0
+          // Read type/depth from the LIVE editor block (not the async snapshot, which can lag).
+          const specType = (block?.attrs?.specType as NodeType | null) ?? 'text'
+          const depth = (block?.attrs?.depth as number | null) ?? 0
           if (nodeId && empty) {
-            // Empty + nested → climb out (outdent). Once it can't climb further, one more Enter
-            // strips the block type (checkbox/list) to plain text (Notion-style), rather than
-            // spawning another empty sibling.
-            const target = outdentTarget(snap, nodeId)
-            if (target) {
-              focusAfterSync.current = nodeId
-              binding.moveNode(nodeId, target.parentId, target.index)
-              return true
+            // Empty + nested → climb out (outdent). At the outermost level, one more Enter strips
+            // the block type (checkbox/list) to plain text (Notion-style), rather than spawning
+            // another empty sibling.
+            if (depth > 0) {
+              const target = outdentTarget(snap, nodeId)
+              if (target) {
+                focusAfterSync.current = nodeId
+                binding.moveNode(nodeId, target.parentId, target.index)
+                return true
+              }
             }
-            if (current && current.type !== 'text') {
+            if (specType !== 'text') {
               focusAfterSync.current = nodeId
               binding.changeNodeType(nodeId, 'text')
               return true
             }
           }
-          const type = current?.type === 'task' ? 'task' : 'text'
+          const type = specType === 'task' ? 'task' : 'text'
           const { parentId, index } = siblingAfter(snap, nodeId)
           binding.createNode({ type, parentId, index })
           return true // prevent the default split (would duplicate the block's nodeId)
