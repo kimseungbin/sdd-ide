@@ -93,7 +93,9 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
             }
           }
           const current = nodeId ? snap.nodes.find((n) => n.id === nodeId) : undefined
-          const type = current?.type === 'task' ? 'task' : 'text'
+          const currentDepth = (block?.attrs?.depth as number | null) ?? 0
+          // New sibling shares current's depth; at the leftmost, tasks are text (no checkbox).
+          const type = current?.type === 'task' && currentDepth > 0 ? 'task' : 'text'
           const { parentId, index } = siblingAfter(snap, nodeId)
           binding.createNode({ type, parentId, index })
           return true // prevent the default split (would duplicate the block's nodeId)
