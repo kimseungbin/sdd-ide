@@ -3,17 +3,17 @@
 
   The editor's doc model is a *projection* of the store, never the source of truth (AC #3).
   This module is the pure, one-way mapping: snapshot → an ordered list of blocks → a Tiptap
-  document. Each editor node carries its store `nodeId`, so edits map back to a structured
-  mutation by id (AC #1/#2). Containment is flattened to a depth-tagged list here — rich
-  nesting/drag editing is a separate item (BL-031); this keeps identity + order + title, which
-  is what title-editing round-trips need.
+  document. Every node projects to ONE uniform `specBlock` (its NodeView renders the right
+  affordance per type), carrying its store `nodeId` so edits map back to a structured mutation
+  (AC #1/#2). Containment is flattened to a depth-tagged list; the depth attr drives visual
+  indentation, and structural editing (nest/reorder) issues moves against the store (BL-031).
 */
 import type { DecisionState, NodeId, NodeType, SpecSnapshot, TaskStatus } from '../../../engine'
 
 export interface SpecBlock {
   nodeId: NodeId
   type: NodeType
-  /** Containment depth (0 = root), for visual indent + heading level. */
+  /** Containment depth (0 = root), for visual indent. */
   depth: number
   title: string
   status?: TaskStatus
@@ -43,40 +43,18 @@ export function snapshotToBlocks(snapshot: SpecSnapshot): SpecBlock[] {
   return out
 }
 
-const HEADING_TYPES = new Set<NodeType>(['spec', 'requirement', 'design'])
-
-/** One block → one Tiptap node (JSON). Empty title → no text node (ProseMirror rejects empty text). */
+/** One block → one uniform `specBlock` Tiptap node (JSON). Empty title → no text node. */
 function blockToNode(block: SpecBlock): Record<string, unknown> {
-  const text = block.title ? [{ type: 'text', text: block.title }] : []
-  if (block.type === 'deferred-decision') {
-    return {
-      type: 'specDecision',
-      attrs: { nodeId: block.nodeId, depth: block.depth, state: block.state ?? 'open' },
-      content: text,
-    }
-  }
-  if (HEADING_TYPES.has(block.type)) {
-    return {
-      type: 'heading',
-      attrs: {
-        nodeId: block.nodeId,
-        depth: block.depth,
-        specType: block.type,
-        level: Math.min(block.depth + 1, 6),
-      },
-      content: text,
-    }
-  }
-  // task / text → paragraph (task carries its status for the badge)
   return {
-    type: 'paragraph',
+    type: 'specBlock',
     attrs: {
       nodeId: block.nodeId,
-      depth: block.depth,
       specType: block.type,
+      depth: block.depth,
       status: block.type === 'task' ? (block.status ?? 'todo') : null,
+      state: block.type === 'deferred-decision' ? (block.state ?? 'open') : null,
     },
-    content: text,
+    content: block.title ? [{ type: 'text', text: block.title }] : [],
   }
 }
 

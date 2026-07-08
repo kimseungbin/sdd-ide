@@ -86,10 +86,5 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
     }
   }, [])
 
-  return (
-    <EditorContent
-      editor={editor}
-      className="spec-editor flex flex-col gap-1 text-fg [&_.ProseMirror]:min-h-24 [&_.ProseMirror]:outline-none"
-    />
-  )
+  return <EditorContent editor={editor} className="spec-editor text-fg" />
 }

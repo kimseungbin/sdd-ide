@@ -1,0 +1,42 @@
+/*
+  BL-030 — spec editor content styling. The editor is contentEditable (Tiptap/ProseMirror), so
+  its blocks are styled here rather than through component props. Colors come from design tokens
+  (Rule 4, var(--color-*)); only structural spacing (indent/margins) uses rem.
+*/
+.spec-editor .ProseMirror {
+  color: var(--color-fg);
+  line-height: 1.5;
+  min-height: 6rem;
+  outline: none;
+}
+
+.spec-editor .ProseMirror > * {
+  margin: 0;
+}
+
+/* Per-block padding + Notion-like hover affordance. */
+.spec-editor .spec-block {
+  margin: 0.1rem 0;
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-md);
+}
+.spec-editor .spec-block:hover {
+  background: color-mix(in srgb, var(--color-fg) 6%, transparent);
+}
+
+/* Depth indentation (containment), driven by the projection's data-depth. */
+.spec-editor .spec-block[data-depth='1'] {
+  margin-left: 1.5rem;
+}
+.spec-editor .spec-block[data-depth='2'] {
+  margin-left: 3rem;
+}
+.spec-editor .spec-block[data-depth='3'] {
+  margin-left: 4.5rem;
+}
+.spec-editor .spec-block[data-depth='4'] {
+  margin-left: 6rem;
+}
+.spec-editor .spec-block[data-depth='5'] {
+  margin-left: 7.5rem;
+}

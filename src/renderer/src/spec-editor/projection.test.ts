@@ -29,20 +29,21 @@ describe('projection: snapshotToBlocks', () => {
 })
 
 describe('projection: snapshotToDoc', () => {
-  it('maps node types to Tiptap nodes and carries the store nodeId on each', () => {
+  it('maps every node to a uniform specBlock carrying its nodeId + type-specific attrs', () => {
     const { engine, ids } = seeded()
     const doc = snapshotToDoc(engine.toSnapshot()) as {
       content: { type: string; attrs: Record<string, unknown> }[]
     }
     const [specNode, , taskNode, ddNode] = doc.content
 
-    expect(specNode.type).toBe('heading')
-    expect(specNode.attrs.nodeId).toBe(ids.spec)
-    expect(taskNode.type).toBe('paragraph')
-    expect(taskNode.attrs.status).toBe('todo')
-    expect(ddNode.type).toBe('specDecision')
-    expect(ddNode.attrs.nodeId).toBe(ids.dd)
-    expect(ddNode.attrs.state).toBe('open')
+    expect(doc.content.every((n) => n.type === 'specBlock')).toBe(true)
+    expect(specNode.attrs).toMatchObject({ nodeId: ids.spec, specType: 'spec' })
+    expect(taskNode.attrs).toMatchObject({ nodeId: ids.task, specType: 'task', status: 'todo' })
+    expect(ddNode.attrs).toMatchObject({
+      nodeId: ids.dd,
+      specType: 'deferred-decision',
+      state: 'open',
+    })
   })
 
   it('falls back to a single empty paragraph for an empty store', () => {
