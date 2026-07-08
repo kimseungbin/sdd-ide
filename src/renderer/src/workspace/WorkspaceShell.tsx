@@ -1,24 +1,25 @@
 import { Panel as ResizablePanel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { Panel } from '../components/Panel'
 import { AgentPanel } from './panes/AgentPanel'
-import { EditorPanel } from './panes/EditorPanel'
+import { DocumentPanel } from './panes/DocumentPanel'
 import { RightRail } from './RightRail'
 
 /*
-  WorkspaceShell (BL-035) — the implementation-session workspace (the impl side of the membrane,
-  D7). A drag-resizable three-part layout:
+  WorkspaceShell (BL-035) — the workspace. A drag-resizable three-part layout:
 
     ┌────────────┬────────────┬────────┐
     │            │            │ dir    │
-    │   agent    │   editor   │        │
+    │   agent    │  document  │        │
     │  (left)    │  (center)  ├────────┤
-    │  1:1 agent:editor       │ spec   │
+    │  1:1 agent:document     │ spec   │
     └────────────┴────────────┴────────┘
       two equal main panes      right rail
 
-  Right rail = directory + spec, swap/collapse (RightRail). Chat and editor default 1:1. Every
-  divider is drag-resizable; sizes persist via autoSaveId (localStorage). Layout uses page-level
-  composition + the third-party resize primitive; our own components keep their closed APIs.
+  Right rail = directory + spec, swap/collapse (RightRail); both are navigators. The document
+  pane shows whatever is open — a file (code) or the spec (editor), BL-030 — so the spec is just
+  another document, not a separate mode. Chat and document default 1:1. Every divider is
+  drag-resizable; sizes persist via autoSaveId (localStorage). Layout uses page-level composition
+  + the third-party resize primitive; our own components keep their closed APIs.
 */
 function Handle() {
   return (
@@ -30,7 +31,7 @@ function Handle() {
 
 export function WorkspaceShell() {
   return (
-    <div className="h-full bg-base p-2">
+    <div className="h-screen bg-base p-2">
       <PanelGroup direction="horizontal" autoSaveId="sdd-workspace-v2" className="h-full">
         <ResizablePanel id="agent" order={1} defaultSize={40} minSize={20}>
           <Panel title="Agent" padding="none">
@@ -41,8 +42,8 @@ export function WorkspaceShell() {
         <Handle />
 
         <ResizablePanel id="editor" order={2} defaultSize={40} minSize={20}>
-          <Panel title="Editor" padding="none">
-            <EditorPanel />
+          <Panel title="Document" padding="none">
+            <DocumentPanel />
           </Panel>
         </ResizablePanel>
 

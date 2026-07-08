@@ -36,9 +36,11 @@ differentiation is the data model + context management, not a text-editing engin
 - **Echo discipline** keeps IME/caret stable: a title keystroke round-trips to the store but is
   NOT in the structural signature, so it never triggers a doc rebuild; only structural/state
   changes re-project (`SpecEditor.tsx`).
-- **Home:** a distinct Spec-authoring surface (`SpecAuthoring`), selected by a provisional
-  top-level switch in `App` — the impl workspace stays read-only (membrane D7). Real session
-  roles/isolation are M5 ([[BL-053]]/[[BL-054]]).
+- **Home:** the spec is a document in the **unified document pane** (`DocumentPanel` → `FileDocument`
+  for files, `SpecDocument` for the spec), opened by activating a node in the spec tree — the way
+  the directory tree opens a file. No separate authoring mode: the D7 membrane governs *agent
+  session* roles (enforced M5, [[BL-053]]/[[BL-054]]), not the human's view of the spec, so the
+  spec is just another editable document.
 - Containment flattened to a depth-tagged list; rich nesting/drag editing is [[BL-031]]. The
   dependency graph is separate ([[BL-043]]).
 

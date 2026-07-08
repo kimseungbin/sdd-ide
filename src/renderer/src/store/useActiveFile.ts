@@ -1,7 +1,13 @@
 import { useSyncExternalStore } from 'react'
-import { workspaceStore } from './workspaceStore'
+import { workspaceStore, type ActiveDocument } from './workspaceStore'
 
-/** Path of the file open in the editor pane, or null. Derives from the store (Rule 6). */
+/** The open document (file or spec node), or null. Derives from the store (Rule 6). */
+export function useActiveDocument(): ActiveDocument {
+  return useSyncExternalStore(workspaceStore.subscribe, workspaceStore.getActiveDocument)
+}
+
+/** Path of the open file, or null when nothing / a spec is open. For the directory highlight. */
 export function useActiveFile(): string | null {
-  return useSyncExternalStore(workspaceStore.subscribe, workspaceStore.getActiveFile)
+  const doc = useActiveDocument()
+  return doc?.kind === 'file' ? doc.path : null
 }

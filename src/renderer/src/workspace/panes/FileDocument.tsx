@@ -1,16 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../../components/Button'
 import { CodeView } from '../../components/CodeView'
-import { useActiveFile } from '../../store/useActiveFile'
 
 /*
-  EditorPanel (BL-037, DD-10) — a read-first code editor. Reading/verifying what the agent
-  produced is the primary use (D20); editing is an escape hatch behind an explicit "Edit"
-  toggle, saved via the fs IPC. Highlighting + editing come from the CodeView primitive
-  (CodeMirror 6, JetBrains/Darcula). Derives its file from workspaceStore (Rule 6).
+  FileDocument (BL-037, DD-10) — a read-first code editor for the open file. Reading/verifying
+  what the agent produced is the primary use (D20); editing is an escape hatch behind an explicit
+  "Edit" toggle, saved via the fs IPC. Highlighting + editing come from the CodeView primitive
+  (CodeMirror 6). One branch of the unified document pane (DocumentPanel); the path is supplied by
+  the workspace store (Rule 6).
 */
-export function EditorPanel() {
-  const activeFile = useActiveFile()
+export function FileDocument({ path }: { path: string }) {
   const [content, setContent] = useState<string | null>(null)
   const [draft, setDraft] = useState('')
   const [editing, setEditing] = useState(false)
@@ -20,13 +19,12 @@ export function EditorPanel() {
   const [revision, setRevision] = useState(0)
 
   useEffect(() => {
-    if (activeFile === null) return
     let cancelled = false
     setContent(null)
     setFailed(false)
     setEditing(false)
     window.sddIde.fs
-      .readFile(activeFile)
+      .readFile(path)
       .then((text) => {
         if (cancelled) return
         setContent(text)
@@ -39,27 +37,15 @@ export function EditorPanel() {
     return () => {
       cancelled = true
     }
-  }, [activeFile])
+  }, [path])
 
-  if (activeFile === null) {
-    return (
-      <div className="flex h-full items-center justify-center p-3 text-center text-muted">
-        <p className="text-sm">
-          Select a file to read.
-          <br />
-          <span className="text-xs">Read-first; manual edit is an escape hatch (D20)</span>
-        </p>
-      </div>
-    )
-  }
-
-  const name = activeFile.split('/').pop() ?? activeFile
+  const name = path.split('/').pop() ?? path
   const dirty = editing && draft !== content
 
   const save = async (): Promise<void> => {
     setSaving(true)
     try {
-      await window.sddIde.fs.writeFile(activeFile, draft)
+      await window.sddIde.fs.writeFile(path, draft)
       setContent(draft)
       setEditing(false)
       setRevision((r) => r + 1)
@@ -108,7 +94,7 @@ export function EditorPanel() {
       ) : (
         <div className="min-h-0 flex-1">
           <CodeView
-            key={`${activeFile}#${revision}`}
+            key={`${path}#${revision}`}
             filename={name}
             value={content}
             editable={editing}

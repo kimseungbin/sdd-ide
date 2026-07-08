@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { TreeItem, useTreeKeyboard, type TreeRow } from '../../components/TreeItem'
 import { useSpecTree } from '../../store/useSpecTree'
+import { useActiveDocument } from '../../store/useActiveFile'
+import { workspaceStore } from '../../store/workspaceStore'
 import type { Node, NodeId, TaskStatus } from '../../../../engine'
 
 /*
-  SpecPanel (BL-038) — the impl-session spec pane. Projects the spec forest (from the main-process
-  SQLite store, D30) as a READ-ONLY drill-down tree, reusing the containment tree pattern
-  (TreeItem + useTreeKeyboard). Derives entirely from the store (Rule 6); the membrane (D7) is
-  preserved by construction — there is no mutation path here (expand/collapse is view state only).
+  SpecPanel (BL-038, BL-030) — the spec outline/navigator. Projects the spec forest (from the
+  main-process SQLite store, D30) as a drill-down tree, reusing the containment tree pattern
+  (TreeItem + useTreeKeyboard). Derives entirely from the store (Rule 6). It is a *summary*:
+  activating a node opens the spec as a document in the unified document pane (the way the
+  directory tree opens a file), where it can be read/edited.
 
   Scope is still the whole forest — narrowing to the relevant scoped slice (DD-9) waits on the
   scoped-context builder (BL-040).
@@ -58,6 +61,7 @@ function buildRows(
 
 export function SpecPanel() {
   const snapshot = useSpecTree()
+  const activeDoc = useActiveDocument()
   const rootIds = useMemo(() => snapshot?.rootIds ?? [], [snapshot])
   const byId = useMemo(
     () => new Map((snapshot?.nodes ?? []).map((node) => [node.id, node])),
@@ -125,12 +129,14 @@ export function SpecPanel() {
           key={row.node.id}
           ref={(el) => registerRow(row.node.id, el)}
           tabIndex={tabIndexFor(row.node.id)}
+          selected={activeDoc?.kind === 'spec' && activeDoc.nodeId === row.node.id}
           expanded={row.expandable ? row.open : undefined}
           level={row.depth + 1}
           posInSet={row.posInSet}
           setSize={row.setSize}
           onActivate={() => {
             setFocusedId(row.node.id)
+            workspaceStore.setActiveSpec(row.node.id)
             if (row.expandable) {
               if (row.open) collapse(row.node.id)
               else expand(row.node.id)
