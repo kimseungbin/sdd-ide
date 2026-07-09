@@ -1,0 +1,52 @@
+# Commit message configuration — minimal, matches this project's existing history.
+# Consumed by the git:commit skill. Add types/scopes as new areas appear; don't pre-add.
+
+plugin_version: '1.0.15'
+
+project: sdd-ide
+description: 'Spec-Driven Development IDE (Electron + electron-vite + React)'
+
+# Format specification
+format:
+  pattern: '{type}({scope}): {subject}'
+  max_subject_length: 72
+  max_body_line_length: 100
+
+# Types in use
+types_quick:
+  feat: 'New feature or capability'
+  fix: 'Bug fix'
+  refactor: 'Code change (neither bug fix nor feature)'
+  docs: 'Documentation only'
+  chore: 'Maintenance, tooling, dependencies'
+
+# Scopes. String = "description"; object adds default_type (skips type deliberation).
+scopes_quick:
+  agent: 'Agent surface — chat pane, provider seam, tool loop (BL-039/BL-051)'
+  settings: 'Settings surface + BYOK credentials'
+  ui: 'Design-system components (Button, Input, Dialog…)'
+  workspace: 'Workspace shell and panes'
+  main: 'Electron main process — menu, IPC, app lifecycle'
+  deps:
+    description: 'Dependency changes'
+    default_type: chore
+  tooling:
+    description: 'Build, lint, CI, git hooks'
+    default_type: chore
+  backlog:
+    description: 'Backlog items and index docs'
+    default_type: docs
+
+# Footer conventions
+footer:
+  required: []
+  optional:
+    - 'BREAKING CHANGE: description'
+    - 'Refs #123 or Closes #123'
+
+# Subject line conventions
+subject_conventions:
+  - "Use imperative mood: 'Add feature' not 'Added feature'"
+  - 'Capitalize first letter'
+  - 'No period at end'
+  - 'Be specific'
