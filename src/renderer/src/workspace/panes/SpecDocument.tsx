@@ -1,6 +1,10 @@
-import { useMemo } from 'react'
-import { SpecEditor } from '../../spec-editor/SpecEditor'
+import { lazy, Suspense, useMemo } from 'react'
 import { createIpcBinding } from '../../spec-editor/binding.ipc'
+
+// The Tiptap stack is heavy and only needed once a spec is open — load it as its own chunk.
+const SpecEditor = lazy(() =>
+  import('../../spec-editor/SpecEditor').then((m) => ({ default: m.SpecEditor })),
+)
 
 /*
   SpecDocument (BL-030) — the spec branch of the unified document pane: the spec as an editable
@@ -12,7 +16,9 @@ export function SpecDocument() {
   const binding = useMemo(() => createIpcBinding(), [])
   return (
     <div className="h-full overflow-auto p-3">
-      <SpecEditor binding={binding} />
+      <Suspense fallback={<p className="text-sm text-muted">Loading…</p>}>
+        <SpecEditor binding={binding} />
+      </Suspense>
     </div>
   )
 }

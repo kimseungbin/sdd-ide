@@ -32,6 +32,7 @@ export function CodeView({ value, filename, editable = false, onChange, onSave }
   const host = useRef<HTMLDivElement>(null)
   const view = useRef<EditorView | null>(null)
   const editableComp = useRef(new Compartment())
+  const languageComp = useRef(new Compartment())
 
   // Latest props behind a ref, so the mount-once editor reads the initial doc/filename and never
   // calls stale onChange/onSave closures — without listing them as effect deps.
@@ -64,7 +65,8 @@ export function CodeView({ value, filename, editable = false, onChange, onSave }
           ...defaultKeymap,
         ]),
         jetbrainsTheme,
-        languageFor(name) ?? [],
+        // Grammar starts empty and is swapped in once its chunk loads (see below).
+        languageComp.current.of([]),
         editableComp.current.of([
           EditorView.editable.of(initialEditable),
           EditorState.readOnly.of(!initialEditable),
@@ -76,7 +78,16 @@ export function CodeView({ value, filename, editable = false, onChange, onSave }
     })
     const editor = new EditorView({ state, parent: host.current })
     view.current = editor
+
+    // Load the language grammar on demand, then reconfigure it in. `active` guards against a
+    // resolve that lands after unmount (fast file switches).
+    let active = true
+    void languageFor(name).then((lang) => {
+      if (active && lang) editor.dispatch({ effects: languageComp.current.reconfigure(lang) })
+    })
+
     return () => {
+      active = false
       editor.destroy()
       view.current = null
     }

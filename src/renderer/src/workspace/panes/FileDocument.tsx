@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Button } from '../../components/Button'
-import { CodeView } from '../../components/CodeView'
+
+// CodeMirror (+ its language grammars) is the heavy part of this pane — split it into its own
+// chunk, loaded when a file is actually opened rather than at renderer startup.
+const CodeView = lazy(() =>
+  import('../../components/CodeView').then((m) => ({ default: m.CodeView })),
+)
 
 /*
   FileDocument (BL-037, DD-10) — a read-first code editor for the open file. Reading/verifying
@@ -93,14 +98,16 @@ export function FileDocument({ path }: { path: string }) {
         <p className="p-3 text-sm text-muted">Loading…</p>
       ) : (
         <div className="min-h-0 flex-1">
-          <CodeView
-            key={`${path}#${revision}`}
-            filename={name}
-            value={content}
-            editable={editing}
-            onChange={setDraft}
-            onSave={() => void save()}
-          />
+          <Suspense fallback={<p className="p-3 text-sm text-muted">Loading…</p>}>
+            <CodeView
+              key={`${path}#${revision}`}
+              filename={name}
+              value={content}
+              editable={editing}
+              onChange={setDraft}
+              onSave={() => void save()}
+            />
+          </Suspense>
         </div>
       )}
     </div>
