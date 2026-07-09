@@ -30,8 +30,10 @@ surface (D7).
 - [x] Conversation state derives from a store (Rule 6); the transcript re-renders on change.
 - [x] Session role surfaced (impl-session) and the disconnected backend stated honestly in-UI —
       no fake agent output.
-- [ ] Real provider calls (BYOK) + MCP mutation path + orchestration/role-gating — deferred to
-      M5: [[BL-050]] / [[BL-051]] / [[BL-052]].
+- [~] Real provider calls (BYOK) — **landed** via the provider seam ([[BL-051]]): the composer
+      streams a real Claude response through `src/main/agent.ts`, and the model can call the
+      app-owned `ask_user` tool (rendered as structured option cards). MCP mutation path ([[BL-050]])
+      and orchestration/role-gating ([[BL-052]] / [[BL-054]]) still M5.
 
 ## Notes / open questions
 

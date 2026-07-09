@@ -106,7 +106,7 @@ _MCP as the second caller; the app layer owns isolation & role enforcement._
 | ID | Title | type | prio | status | decisions |
 |----|-------|------|------|--------|-----------|
 | [BL-050](./items/BL-050-mcp-adapter.md) | MCP adapter over the spec engine | feature | high | backlog | D2 |
-| [BL-051](./items/BL-051-byok-provider-auth.md) | BYOK provider-agnostic auth | infra | medium | backlog | D8 |
+| [BL-051](./items/BL-051-byok-provider-auth.md) | BYOK provider-agnostic auth | infra | medium | in-progress | D8 |
 | [BL-052](./items/BL-052-orchestration-triggers.md) | Orchestration layer + deterministic isolation triggers | feature | high | backlog | D8 |
 | [BL-053](./items/BL-053-session-membrane.md) | Spec vs. implementation session isolation (membrane) | feature | high | backlog | D7 |
 | [BL-054](./items/BL-054-role-aware-api-gating.md) | Role-aware API gating (permissions) | feature | high | backlog | D24 |
