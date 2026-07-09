@@ -35,3 +35,43 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # Records a perf snapshot (bundle size, cold-start, idle memory) and attaches it to the
+  # commit as a git note under refs/notes/perf. Push-only: notes belong on real main commits,
+  # and fork PRs lack the write token. Serialized so two pushes can't race on the notes ref.
+  # View locally with:  git fetch origin 'refs/notes/perf:refs/notes/perf' && git log --notes=perf
+  perf:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency: perf-notes
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # System libraries Electron/Chromium need to launch headless under xvfb.
+      - name: Install Electron runtime deps
+        run: sudo npx playwright install-deps
+
+      - name: Build
+        run: npm run build
+
+      - name: Measure (xvfb)
+        run: xvfb-run --auto-servernum npm run perf
+
+      - name: Attach perf note
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin 'refs/notes/perf:refs/notes/perf' || true
+          git notes --ref=perf add -f -F perf-metrics.json "$GITHUB_SHA"
+          git push origin refs/notes/perf
