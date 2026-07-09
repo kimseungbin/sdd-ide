@@ -9,7 +9,7 @@
 // Usage:  node scripts/measure-perf.mjs            # prints summary, writes perf-metrics.json
 //         PERF_RUNS=3 node scripts/measure-perf.mjs
 import { _electron as electron } from 'playwright'
-import { readdirSync, statSync, writeFileSync } from 'node:fs'
+import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createRequire } from 'node:module'
@@ -33,6 +33,32 @@ function dirBytes(dir) {
   for (const entry of entries) {
     const full = join(dir, entry.name)
     total += entry.isDirectory() ? dirBytes(full) : statSync(full).size
+  }
+  return total
+}
+
+/**
+ * Bytes the renderer loads *eagerly* at startup: the module entry script, anything Vite
+ * marks `modulepreload`, and the stylesheet — parsed straight out of index.html's <head>.
+ * This is the number code-splitting actually moves; totalBytes hides it (lazy chunks still
+ * exist on disk, they just aren't fetched until a document opens).
+ */
+function initialRendererBytes() {
+  let html
+  try {
+    html = readFileSync(join(root, 'out', 'renderer', 'index.html'), 'utf8')
+  } catch {
+    return 0
+  }
+  const head = html.slice(0, html.indexOf('</head>'))
+  const refs = new Set([...head.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)].map((m) => m[1]))
+  let total = 0
+  for (const ref of refs) {
+    try {
+      total += statSync(join(root, 'out', 'renderer', ref.replace(/^\.?\//, ''))).size
+    } catch {
+      // A cross-origin or absent ref — skip it.
+    }
   }
   return total
 }
@@ -91,6 +117,7 @@ async function main() {
     mainBytes: dirBytes(join(root, 'out', 'main')),
     preloadBytes: dirBytes(join(root, 'out', 'preload')),
     rendererBytes: dirBytes(join(root, 'out', 'renderer')),
+    rendererInitialBytes: initialRendererBytes(),
   }
   bundle.totalBytes = bundle.mainBytes + bundle.preloadBytes + bundle.rendererBytes
 
@@ -123,7 +150,7 @@ async function main() {
     [
       '',
       '── perf ──────────────────────────────',
-      `bundle   total ${kb(bundle.totalBytes)}  (main ${kb(bundle.mainBytes)} · preload ${kb(bundle.preloadBytes)} · renderer ${kb(bundle.rendererBytes)})`,
+      `bundle   renderer initial ${kb(bundle.rendererInitialBytes)} / ${kb(bundle.rendererBytes)} total  ·  main ${kb(bundle.mainBytes)} · preload ${kb(bundle.preloadBytes)}`,
       `startup  first-paint ${result.startup.firstPaintMsMedian} ms  ·  launch→window ${result.startup.launchToWindowMsMedian} ms`,
       `memory   idle working-set ${(result.memory.idleWorkingSetKbMedian / 1024).toFixed(0)} MB`,
       `(median of ${RUNS} runs → ${OUTPUT})`,
