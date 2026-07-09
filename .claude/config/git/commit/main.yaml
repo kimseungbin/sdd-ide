@@ -17,6 +17,7 @@ types_quick:
   feat: 'New feature or capability'
   fix: 'Bug fix'
   refactor: 'Code change (neither bug fix nor feature)'
+  perf: 'Performance improvement'
   docs: 'Documentation only'
   chore: 'Maintenance, tooling, dependencies'
 
