@@ -1,7 +1,16 @@
 import { app, BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { registerIpcHandlers, registerSpecIpc } from './ipc'
+import { registerAgentIpc } from './agent'
+import { registerCredentialsIpc } from './credentials'
+import { installAppMenu } from './menu'
 import { openSpecStore, seedDemoSpec } from './specStore'
+
+// Set the app name early (before `ready`) so menu role items (About/Hide/Quit) and dialogs read
+// "SDD IDE" instead of the dev process name "Electron". Packaged builds also get this from
+// electron-builder.yml's productName; in dev the bold macOS app-menu *title* may still show
+// "Electron" (it reads the Electron.app bundle) until a packaged build.
+app.setName('SDD IDE')
 
 function createWindow(): void {
   const window = new BrowserWindow({
@@ -34,6 +43,13 @@ app.whenReady().then(() => {
   const specStore = openSpecStore(join(process.cwd(), '.sdd', 'spec.db'))
   if (specStore.engine.getRoots().length === 0) seedDemoSpec(specStore.engine)
   registerSpecIpc(specStore)
+
+  // App-owned agent surface (BL-039) + BYOK credentials (BL-051), both main-process.
+  registerCredentialsIpc()
+  registerAgentIpc()
+
+  // Native menu owns the Settings… entry point (Cmd/Ctrl+,), which opens the settings surface.
+  installAppMenu()
 
   createWindow()
 
