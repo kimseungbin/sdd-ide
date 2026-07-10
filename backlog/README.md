@@ -69,9 +69,9 @@ _The structured store IS the durable record, persisted to a local SQLite DB (D30
 
 | ID | Title | type | prio | status | decisions |
 |----|-------|------|------|--------|-----------|
-| [BL-020](./items/BL-020-hybrid-markdown-projection.md) | SQLite store: schema + persistence (load / write-through) | feature | high | in-progress | D30 |
+| [BL-020](./items/BL-020-hybrid-markdown-projection.md) | SQLite store: schema + persistence (load / write-through) | feature | high | done | D30 |
 | [BL-021](./items/BL-021-parse-back-confirmation.md) | Parse-back path — RETIRED (superseded by D30) | feature | high | deferred | D30 |
-| [BL-022](./items/BL-022-in-repo-storage-rehydration.md) | Local store lifecycle (open / load / migrations) | feature | high | in-progress | D30 |
+| [BL-022](./items/BL-022-in-repo-storage-rehydration.md) | Local store lifecycle (open / load / migrations) | feature | high | done | D30 |
 
 ### M3 — Editor integration (authoring UI)
 _Adopt an editor via adapter; its doc model is a projection of the store._

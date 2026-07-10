@@ -1,7 +1,7 @@
 ---
 id: BL-020
 title: SQLite store — schema + persistence (load / write-through)
-status: in-progress
+status: done
 type: feature
 priority: high
 milestone: M2
@@ -26,9 +26,12 @@ persistence underneath. Rows ↔ typed nodes is a lossless mapping — there is 
       Round-trip covered by `src/main/specStore.test.ts`.
 - [x] Runs in the **main process** using Node's built-in **`node:sqlite`** (`DatabaseSync`,
       synchronous — no native module); renderer reads via IPC (resolves DD-5).
-- [ ] Row-level writes + FK enforcement — deferred. First cut persists a full-snapshot replace
-      per change (correct at spec scale; integrity guaranteed by the engine API). FK constraints
-      + delta writes are the optimization.
+- [x] Row-level writes + FK enforcement. Every mutation writes through as a **delta** (insert/
+      update/delete only changed rows) inside a transaction, diffing the new snapshot against the
+      last persisted set (`createPersister` in `src/main/specStore.ts`). `nodes.parent_id`,
+      `edges.from_id`, `edges.to_id` are **deferred foreign keys** to `nodes(id)` (checked at
+      COMMIT, so intra-transaction row order is free); `PRAGMA foreign_keys = ON` in normal
+      operation. Covered by `src/main/specStore.test.ts` (orphan-edge rejection, update/delete deltas).
 
 ## Notes / open questions
 
