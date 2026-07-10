@@ -18,10 +18,21 @@ import {
   in-memory typed engine stays the hot-path query/traversal layer; SQLite is load-on-open +
   write-through persistence. Rows ↔ typed nodes is a lossless mapping — there is no parsing.
 
-  Persistence strategy is full-snapshot replace inside a transaction on every change — simple
-  and correct at spec scale. Row-level writes + FK enforcement are a later optimization.
+  Persistence: schema evolves through an ordered migration runner keyed on `PRAGMA user_version`
+  (BL-022 — the store outlives any one app version), and every mutation writes through as a
+  row-level delta (insert/update/delete only what changed) inside a transaction (BL-020).
+  Referential integrity is enforced by deferred foreign keys: `nodes.parent_id`, `edges.from_id`,
+  and `edges.to_id` all reference `nodes(id)`, checked at COMMIT so intra-transaction row order
+  is irrelevant. The engine API (D2) is the source of truth; the FKs are a persistence-layer net.
 */
-const SCHEMA = `
+
+// ── Schema migrations (BL-022) ──────────────────────────────────────────────
+// Each migration bumps `user_version` by one. Migration 1 is the original no-FK schema, kept
+// verbatim (with IF NOT EXISTS) so DBs created before versioning existed migrate cleanly.
+// Migration 2 rebuilds both tables with deferred foreign keys — SQLite can't ALTER a FK onto an
+// existing table, so a create-copy-drop-rename rebuild is the only correct path.
+
+const MIGRATION_1_INITIAL = `
 CREATE TABLE IF NOT EXISTS nodes (
   id TEXT PRIMARY KEY,
   type TEXT NOT NULL,
@@ -41,6 +52,66 @@ CREATE INDEX IF NOT EXISTS idx_nodes_parent ON nodes(parent_id);
 CREATE INDEX IF NOT EXISTS idx_edges_from ON edges(from_id);
 CREATE INDEX IF NOT EXISTS idx_edges_to ON edges(to_id);
 `
+
+// Rebuild `nodes` first (self-referencing parent_id), then `edges` against the finalized table.
+// Runs with foreign_keys OFF (see openSpecStore), so the drop/rename churn can't trip a check.
+const MIGRATION_2_FOREIGN_KEYS = `
+CREATE TABLE nodes_new (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  parent_id TEXT REFERENCES nodes_new(id) DEFERRABLE INITIALLY DEFERRED,
+  ord INTEGER NOT NULL,
+  status TEXT,
+  state TEXT
+);
+INSERT INTO nodes_new (id, type, title, parent_id, ord, status, state)
+  SELECT id, type, title, parent_id, ord, status, state FROM nodes;
+DROP TABLE nodes;
+ALTER TABLE nodes_new RENAME TO nodes;
+
+CREATE TABLE edges_new (
+  id TEXT PRIMARY KEY,
+  from_id TEXT NOT NULL REFERENCES nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  to_id TEXT NOT NULL REFERENCES nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  type TEXT NOT NULL
+);
+INSERT INTO edges_new (id, from_id, to_id, type)
+  SELECT id, from_id, to_id, type FROM edges;
+DROP TABLE edges;
+ALTER TABLE edges_new RENAME TO edges;
+
+CREATE INDEX idx_nodes_parent ON nodes(parent_id);
+CREATE INDEX idx_edges_from ON edges(from_id);
+CREATE INDEX idx_edges_to ON edges(to_id);
+`
+
+const MIGRATIONS: readonly { version: number; sql: string }[] = [
+  { version: 1, sql: MIGRATION_1_INITIAL },
+  { version: 2, sql: MIGRATION_2_FOREIGN_KEYS },
+]
+
+/** Apply every migration newer than the DB's current `user_version`, each in its own transaction. */
+function migrate(db: DatabaseSync): void {
+  const { user_version: current } = db.prepare('PRAGMA user_version').get() as {
+    user_version: number
+  }
+  for (const migration of MIGRATIONS) {
+    if (migration.version <= current) continue
+    db.exec('BEGIN')
+    try {
+      db.exec(migration.sql)
+      // `user_version` takes a literal, not a bound param; the value is a trusted constant.
+      db.exec(`PRAGMA user_version = ${migration.version}`)
+      db.exec('COMMIT')
+    } catch (err) {
+      db.exec('ROLLBACK')
+      throw err
+    }
+  }
+}
+
+// ── Row ↔ node mapping ──────────────────────────────────────────────────────
 
 interface NodeRow {
   id: string
@@ -105,37 +176,104 @@ function loadSnapshot(db: DatabaseSync): SpecSnapshot {
   return { version: 1, rootIds: orderedChildren(null), nodes, edges }
 }
 
-function persist(db: DatabaseSync, snapshot: SpecSnapshot): void {
-  // Sibling order = index among rootIds (roots) or among a parent's children.
+// ── Delta write-through (BL-020) ────────────────────────────────────────────
+// The persisted value of a row, keyed by id. Sibling `ord` = index among rootIds / a parent's
+// children. Comparing these records against the last persisted set yields the minimal write.
+
+interface NodeRecord {
+  type: string
+  title: string
+  parent_id: string | null
+  ord: number
+  status: string | null
+  state: string | null
+}
+interface EdgeRecord {
+  from_id: string
+  to_id: string
+  type: string
+}
+
+function snapshotRecords(snapshot: SpecSnapshot): {
+  nodes: Map<string, NodeRecord>
+  edges: Map<string, EdgeRecord>
+} {
   const ordById = new Map<string, number>()
   snapshot.rootIds.forEach((id, i) => ordById.set(id, i))
   for (const node of snapshot.nodes) node.children.forEach((childId, i) => ordById.set(childId, i))
 
-  const insertNode = db.prepare(
+  const nodes = new Map<string, NodeRecord>()
+  for (const node of snapshot.nodes) {
+    nodes.set(node.id, {
+      type: node.type,
+      title: node.title,
+      parent_id: node.parentId,
+      ord: ordById.get(node.id) ?? 0,
+      status: node.type === 'task' ? node.status : null,
+      state: node.type === 'deferred-decision' ? node.state : null,
+    })
+  }
+  const edges = new Map<string, EdgeRecord>()
+  for (const edge of snapshot.edges) {
+    edges.set(edge.id, { from_id: edge.from, to_id: edge.to, type: edge.type })
+  }
+  return { nodes, edges }
+}
+
+function nodeRecordEq(a: NodeRecord, b: NodeRecord): boolean {
+  return (
+    a.type === b.type &&
+    a.title === b.title &&
+    a.parent_id === b.parent_id &&
+    a.ord === b.ord &&
+    a.status === b.status &&
+    a.state === b.state
+  )
+}
+function edgeRecordEq(a: EdgeRecord, b: EdgeRecord): boolean {
+  return a.from_id === b.from_id && a.to_id === b.to_id && a.type === b.type
+}
+
+/** Build a stateful persister that writes only the rows that changed since its last call. */
+function createPersister(db: DatabaseSync, initial: SpecSnapshot): (next: SpecSnapshot) => void {
+  const insNode = db.prepare(
     'INSERT INTO nodes (id, type, title, parent_id, ord, status, state) VALUES (?, ?, ?, ?, ?, ?, ?)',
   )
-  const insertEdge = db.prepare('INSERT INTO edges (id, from_id, to_id, type) VALUES (?, ?, ?, ?)')
+  const updNode = db.prepare(
+    'UPDATE nodes SET type = ?, title = ?, parent_id = ?, ord = ?, status = ?, state = ? WHERE id = ?',
+  )
+  const delNode = db.prepare('DELETE FROM nodes WHERE id = ?')
+  const insEdge = db.prepare('INSERT INTO edges (id, from_id, to_id, type) VALUES (?, ?, ?, ?)')
+  const updEdge = db.prepare('UPDATE edges SET from_id = ?, to_id = ?, type = ? WHERE id = ?')
+  const delEdge = db.prepare('DELETE FROM edges WHERE id = ?')
 
-  db.exec('BEGIN')
-  try {
-    db.exec('DELETE FROM nodes')
-    db.exec('DELETE FROM edges')
-    for (const node of snapshot.nodes) {
-      insertNode.run(
-        node.id,
-        node.type,
-        node.title,
-        node.parentId,
-        ordById.get(node.id) ?? 0,
-        node.type === 'task' ? node.status : null,
-        node.type === 'deferred-decision' ? node.state : null,
-      )
+  // Starts synced with what loadSnapshot just read, so the first mutation writes only its delta.
+  let prev = snapshotRecords(initial)
+
+  return function persist(nextSnapshot: SpecSnapshot): void {
+    const next = snapshotRecords(nextSnapshot)
+    db.exec('BEGIN')
+    try {
+      // Deferred FKs mean intra-transaction order is free; deletes first keeps the churn minimal.
+      for (const id of prev.nodes.keys()) if (!next.nodes.has(id)) delNode.run(id)
+      for (const id of prev.edges.keys()) if (!next.edges.has(id)) delEdge.run(id)
+      for (const [id, r] of next.nodes) {
+        const before = prev.nodes.get(id)
+        if (!before) insNode.run(id, r.type, r.title, r.parent_id, r.ord, r.status, r.state)
+        else if (!nodeRecordEq(before, r))
+          updNode.run(r.type, r.title, r.parent_id, r.ord, r.status, r.state, id)
+      }
+      for (const [id, r] of next.edges) {
+        const before = prev.edges.get(id)
+        if (!before) insEdge.run(id, r.from_id, r.to_id, r.type)
+        else if (!edgeRecordEq(before, r)) updEdge.run(r.from_id, r.to_id, r.type, id)
+      }
+      db.exec('COMMIT')
+    } catch (err) {
+      db.exec('ROLLBACK')
+      throw err // leave `prev` untouched so the next write re-diffs against the committed state
     }
-    for (const edge of snapshot.edges) insertEdge.run(edge.id, edge.from, edge.to, edge.type)
-    db.exec('COMMIT')
-  } catch (err) {
-    db.exec('ROLLBACK')
-    throw err
+    prev = next
   }
 }
 
@@ -150,14 +288,21 @@ export interface MainSpecStore {
 export function openSpecStore(dbPath: string): MainSpecStore {
   if (dbPath !== ':memory:') mkdirSync(dirname(dbPath), { recursive: true })
   const db = new DatabaseSync(dbPath)
-  db.exec(SCHEMA)
 
-  const engine = createSpecEngine(loadSnapshot(db))
+  // FK enforcement must be toggled outside a transaction; run migrations with it OFF so table
+  // rebuilds don't trip checks, then turn it ON for all normal write-through traffic.
+  db.exec('PRAGMA foreign_keys = OFF')
+  migrate(db)
+  db.exec('PRAGMA foreign_keys = ON')
+
+  const initial = loadSnapshot(db)
+  const engine = createSpecEngine(initial)
+  const persist = createPersister(db, initial)
   const listeners = new Set<() => void>()
 
-  // Write-through: every mutation (the single D2 path) persists + notifies.
+  // Write-through: every mutation (the single D2 path) persists its delta + notifies.
   engine.subscribe(() => {
-    persist(db, engine.toSnapshot())
+    persist(engine.toSnapshot())
     for (const listener of listeners) listener()
   })
 
