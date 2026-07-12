@@ -1,0 +1,57 @@
+# Dependabot keeps dependencies current with a steady stream of small PRs instead of a
+# big-bang upgrade. Every PR runs the full CI gate (format / lint / typecheck / test / build).
+# Related packages are grouped so one PR moves a whole cluster (e.g. all @codemirror/*).
+version: 2
+updates:
+  # ── npm (application + dev dependencies) ────────────────────────────────────
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    # Group patch + minor bumps so routine updates land as a few reviewable PRs.
+    # Majors are deliberately left ungrouped — each gets its own PR for manual review.
+    groups:
+      codemirror:
+        patterns: ['@codemirror/*', '@lezer/*']
+        update-types: [minor, patch]
+      tiptap:
+        patterns: ['@tiptap/*']
+        update-types: [minor, patch]
+      radix:
+        patterns: ['@radix-ui/*']
+        update-types: [minor, patch]
+      react:
+        patterns: ['react', 'react-dom', '@types/react', '@types/react-dom']
+        update-types: [minor, patch]
+      dev-tooling:
+        # Linters, formatters, test + build tooling — low risk, safe to batch.
+        patterns:
+          - eslint
+          - '@typescript-eslint/*'
+          - oxlint
+          - prettier
+          - typescript
+          - vite
+          - vitest
+          - electron-vite
+          - '@vitejs/*'
+          - '@tailwindcss/*'
+          - tailwindcss
+          - playwright
+          - '@ladle/*'
+        update-types: [minor, patch]
+    ignore:
+      # Electron majors bundle Chromium/Node bumps and force native-module rebuilds —
+      # review them by hand rather than as an auto-opened PR.
+      - dependency-name: electron
+        update-types: [version-update:semver-major]
+
+  # ── GitHub Actions (workflow pinned action versions) ───────────────────────
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ['*']
