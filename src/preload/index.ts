@@ -53,6 +53,20 @@ const api: SddIdeApi = {
       return () => ipcRenderer.removeListener(IPC.agentError, handler)
     },
   },
+  git: {
+    isRepo: () => ipcRenderer.invoke(IPC.gitIsRepo),
+    status: () => ipcRenderer.invoke(IPC.gitStatus),
+    stage: (paths) => ipcRenderer.invoke(IPC.gitStage, paths),
+    unstage: (paths) => ipcRenderer.invoke(IPC.gitUnstage, paths),
+    discard: (paths) => ipcRenderer.invoke(IPC.gitDiscard, paths),
+    commit: (message) => ipcRenderer.invoke(IPC.gitCommit, message),
+    currentBranch: () => ipcRenderer.invoke(IPC.gitCurrentBranch),
+    branches: () => ipcRenderer.invoke(IPC.gitBranches),
+    checkout: (name) => ipcRenderer.invoke(IPC.gitCheckout, name),
+    createBranch: (name) => ipcRenderer.invoke(IPC.gitCreateBranch, name),
+    log: (limit) => ipcRenderer.invoke(IPC.gitLog, limit),
+    diff: (path) => ipcRenderer.invoke(IPC.gitDiff, path),
+  },
   menu: {
     onOpenSettings: (listener) => {
       const handler = (): void => listener()

@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron'
 import { join } from 'node:path'
 import { registerIpcHandlers, registerSpecIpc } from './ipc'
+import { registerGitIpc } from './git'
 import { registerAgentIpc } from './agent'
 import { registerCredentialsIpc } from './credentials'
 import { installAppMenu } from './menu'
@@ -37,6 +38,8 @@ function createWindow(): void {
 
 app.whenReady().then(() => {
   registerIpcHandlers()
+  // Code-side git panel (status/staging/commit/branch/log/line-diff), shelled out from main.
+  registerGitIpc()
 
   // The spec store + engine live in main (D30): a local SQLite DB in the project's .sdd/ dir.
   // Seed a demo spec on first run (empty DB); replaced by real specs once BL-022 lands.

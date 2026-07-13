@@ -17,6 +17,7 @@ import type {
   ProviderId,
   SecureStorageStatus,
 } from './agent'
+import type { GitBranch, GitCommit, GitStatus } from './git'
 
 export interface DirEntry {
   name: string
@@ -68,6 +69,28 @@ export interface SddIdeApi {
     /** The turn failed (no provider key, network, provider error) — surfaced honestly, no fake output. */
     onError(listener: (error: AgentError) => void): () => void
   }
+  // Code-side git integration (the git panel). Ops `sem` doesn't cover — status/staging/commit/
+  // branch/log/line-diff — shelled out from main. The entity diff is the separate `sem` surface.
+  // Specs never touch git (D30); this is purely the code side.
+  git: {
+    /** Whether the workspace root is inside a git work tree. */
+    isRepo(): Promise<boolean>
+    /** Working-tree status: branch + changed files (staged and unstaged sides). */
+    status(): Promise<GitStatus>
+    stage(paths: string[]): Promise<void>
+    unstage(paths: string[]): Promise<void>
+    /** Revert selected changes to HEAD (tracked restored, untracked removed). */
+    discard(paths: string[]): Promise<void>
+    /** Commit the staged changes with `message`. */
+    commit(message: string): Promise<void>
+    currentBranch(): Promise<string | null>
+    branches(): Promise<GitBranch[]>
+    checkout(name: string): Promise<void>
+    createBranch(name: string): Promise<void>
+    log(limit?: number): Promise<GitCommit[]>
+    /** Unified `git diff HEAD` for one file — the line-diff fallback for non-entity files. */
+    diff(path: string): Promise<string>
+  }
   // Native app menu → renderer signals (main owns the menu; the renderer reacts).
   menu: {
     /** The Settings… item (or Cmd+,) was invoked — open the settings surface. */
@@ -110,4 +133,16 @@ export const IPC = {
   credentialsClearKey: 'credentials:clearKey',
   credentialsSecureStorageStatus: 'credentials:secureStorageStatus',
   menuOpenSettings: 'menu:openSettings',
+  gitIsRepo: 'git:isRepo',
+  gitStatus: 'git:status',
+  gitStage: 'git:stage',
+  gitUnstage: 'git:unstage',
+  gitDiscard: 'git:discard',
+  gitCommit: 'git:commit',
+  gitCurrentBranch: 'git:currentBranch',
+  gitBranches: 'git:branches',
+  gitCheckout: 'git:checkout',
+  gitCreateBranch: 'git:createBranch',
+  gitLog: 'git:log',
+  gitDiff: 'git:diff',
 } as const
