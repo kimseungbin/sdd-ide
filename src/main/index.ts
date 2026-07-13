@@ -19,6 +19,17 @@ function createWindow(): void {
     width: 1280,
     height: 800,
     show: false,
+    // macOS vibrancy: the window itself is translucent so the desktop shows through,
+    // giving the glass surfaces (rail, dialogs) real content to refract. The renderer
+    // background is transparent (theme.css) so this reads through. 'under-window' is the
+    // general-purpose material; visualEffectState keeps it lit even when unfocused.
+    ...(process.platform === 'darwin'
+      ? {
+          vibrancy: 'under-window' as const,
+          visualEffectState: 'active' as const,
+          backgroundColor: '#00000000',
+        }
+      : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,

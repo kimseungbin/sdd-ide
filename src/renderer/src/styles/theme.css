@@ -1,6 +1,17 @@
 @import 'tailwindcss';
 
 /*
+  Explicitly scan the renderer source for utility candidates. Tailwind v4's
+  automatic content detection keys off the Vite `root`; the app build roots at the
+  project (so it works there), but Ladle sets `root` to its own internal app dir,
+  so auto-detection never sees src/ and generates zero utilities — components render
+  unstyled in `ladle serve`/`build`. This @source (resolved relative to this file)
+  makes detection deterministic for both pipelines. Paths are relative to
+  src/renderer/src/styles/ → `../` is src/renderer/src.
+*/
+@source '../**/*.{ts,tsx}';
+
+/*
   Design tokens — the single source of truth for the UI (CLAUDE.md Rule 4).
   Tokens declared here become Tailwind utilities (e.g. --color-brand -> bg-brand,
   text-brand; --radius-md -> rounded-md). Components reference these, never raw
@@ -57,13 +68,107 @@
   --cm-invalid: #bc3f3c;
 }
 
+/*
+  Glass materials (Liquid-Glass-inspired — see the Surface component).
+
+  Apple reserves glass for the *navigation layer* that floats above content, and
+  never stacks glass on glass. In this IDE that means chrome — side rails, panel
+  headers/toolbars, the command palette, dialogs — may be glass; the editor
+  *content* layer stays solid (--color-surface). Modeled here as material tokens
+  (a translucent tint + a highlight edge + a grounding shadow + an inner specular,
+  mirroring Apple's highlight/shadow/illumination), consumed only through the
+  Surface component's closed `material` variant — never ad-hoc per element (Rule 2/4).
+
+  Refraction/lensing (SVG feDisplacementMap → backdrop-filter) is a deliberate
+  future step, not v1: it's Chromium-only (fine — Electron is Chromium) but heavy
+  and low-fidelity (±128px, pixelation). v1 is layered frosted glass, which is
+  robust and legible.
+*/
+:root {
+  /* Dark theme: a light tint laid over the dark app base. Channels split from the
+     alpha so prefers-reduced-transparency can raise opacity without restating rgb. */
+  --glass-tint: 255 255 255;
+  --glass-alpha: 0.07; /* glass — airy, mostly the backdrop shows through */
+  --glass-alpha-strong: 0.18; /* glass-strong — visibly milkier, for floating palettes/dialogs */
+  --glass-blur: 8px; /* light enough that content stays visibly see-through, not smeared opaque */
+  --glass-blur-strong: 20px;
+  --glass-saturate: 1.6; /* pull vibrancy from the backdrop, like Apple's material */
+  --glass-highlight: rgba(255, 255, 255, 0.18); /* top/edge light-casting layer */
+  --glass-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5); /* grounding / separation */
+  --glass-specular: inset 0 1px 0 0 rgba(255, 255, 255, 0.22); /* inner top highlight */
+}
+
+.material-solid {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+.material-glass {
+  background: rgb(var(--glass-tint) / var(--glass-alpha));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-highlight);
+  box-shadow: var(--glass-shadow), var(--glass-specular);
+}
+
+.material-glass-strong {
+  background: rgb(var(--glass-tint) / var(--glass-alpha-strong));
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-highlight);
+  box-shadow: var(--glass-shadow), var(--glass-specular);
+}
+
+/*
+  Accessibility (Rule 5): honor the OS "Reduce Transparency" setting. An
+  Electron/Chromium app inherits this system preference for free (Chrome 118+).
+  Drop the blur and fall back to the solid surface so text stays legible over any
+  backdrop — the WCAG-contrast escape valve for translucent UI.
+*/
+@media (prefers-reduced-transparency: reduce) {
+  .material-glass,
+  .material-glass-strong {
+    background: var(--color-surface);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: var(--color-border);
+  }
+}
+
+/*
+  Ambient app backdrop. A flat IDE gives glass nothing to refract — backdrop-filter
+  needs colour behind it to read as glass rather than a tinted box. This lays a very
+  subtle brand-hued glow over the base so navigation-layer glass (the right rail)
+  picks up depth and colour. Tokens only (Rule 4): brand/base via color-mix, no raw
+  hex. Kept subtle so the content layer stays neutral and legible.
+*/
+.bg-ambient {
+  /* Translucent (not solid) so the window vibrancy shows through the whole shell, while a
+     dark wash keeps chrome legible. Content panes stay opaque (material-solid) on top. */
+  background-color: color-mix(in srgb, var(--color-base) 55%, transparent);
+  background-image:
+    radial-gradient(
+      70% 55% at 88% 8%,
+      color-mix(in srgb, var(--color-brand) 20%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      55% 45% at 8% 92%,
+      color-mix(in srgb, var(--color-brand) 10%, transparent),
+      transparent 70%
+    );
+}
+
 html,
 body {
   margin: 0;
 }
 
 body {
-  background: var(--color-base);
+  /* Transparent so the macOS window vibrancy (desktop wallpaper) reads through — this is
+     what makes the app itself feel like glass. The shell (.bg-ambient) lays a translucent
+     dark wash on top for legibility; where nothing covers it, the desktop shows through. */
+  background: transparent;
   color: var(--color-fg);
   color-scheme: dark;
   font-family:

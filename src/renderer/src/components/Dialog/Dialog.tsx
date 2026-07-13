@@ -8,7 +8,12 @@ import { Button } from '../Button'
 
   - Rule 2: no className/style passthrough — appearance is fixed here; callers pass content + the
     controlled `open`/`onOpenChange` and a `title`.
-  - Rule 4: scrim/surface/border/text from tokens (bg-base, bg-surface, border-border, text-fg…).
+  - Rule 4: scrim/surface/border/text from tokens (bg-base, --glass-*, text-fg…).
+
+  Surface is glass (the .material-glass token set): a modal floats above content, which is
+  glass's proper home (Apple's Liquid Glass — the navigation/overlay layer, not the content
+  layer). The scrim is a light dim (not opaque) so the editor stays visible, frosted, through
+  the glass — that translucency is the point; a heavy scrim would hide it and defeat the glass.
 */
 export interface DialogProps {
   open: boolean
@@ -24,10 +29,10 @@ export function Dialog({ open, onOpenChange, title, description, children }: Dia
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
       <RadixDialog.Portal>
-        <RadixDialog.Overlay className="fixed inset-0 bg-base/80" />
+        <RadixDialog.Overlay className="fixed inset-0 bg-base/40" />
         <RadixDialog.Content
           aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 flex w-[28rem] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-md border border-border bg-surface p-4 focus:outline-none"
+          className="material-glass fixed left-1/2 top-1/2 flex w-[28rem] max-w-[90vw] -translate-x-1/2 -translate-y-1/2 flex-col gap-3 rounded-md p-4 focus:outline-none"
         >
           <div className="flex items-start justify-between gap-2">
             <div className="flex flex-col gap-1">

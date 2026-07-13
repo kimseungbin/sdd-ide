@@ -24,8 +24,25 @@ const content = cva('min-h-0 flex-1 overflow-auto text-sm text-fg', {
   defaultVariants: { padding: 'normal' },
 })
 
+/*
+  The panel's outer shell material. `solid` is the default (content panes, e.g. the
+  document editor — the content layer stays opaque). `glass` is for the navigation
+  layer that floats above content — the right-rail navigators — mirroring Apple's
+  Liquid Glass rule. Both select the shared `.material-*` classes from theme.css
+  (the single material vocabulary, also used by Surface); never glass-on-glass.
+*/
+const shell = cva('flex h-full min-h-0 flex-col overflow-hidden rounded-md', {
+  variants: {
+    material: {
+      solid: 'material-solid',
+      glass: 'material-glass',
+    },
+  },
+  defaultVariants: { material: 'solid' },
+})
+
 // Public prop vocabulary (Rule 7). No className/style — styling is the closed variant set.
-export interface PanelProps extends VariantProps<typeof content> {
+export interface PanelProps extends VariantProps<typeof content>, VariantProps<typeof shell> {
   /** Header label; also names the region for assistive tech (Rule 5). */
   title: string
   children?: ReactNode
@@ -35,14 +52,17 @@ export interface PanelProps extends VariantProps<typeof content> {
   collapsed?: boolean
 }
 
-export function Panel({ title, padding, children, actions, collapsed = false }: PanelProps) {
+export function Panel({
+  title,
+  padding,
+  material,
+  children,
+  actions,
+  collapsed = false,
+}: PanelProps) {
   const headingId = useId()
   return (
-    <section
-      role="region"
-      aria-labelledby={headingId}
-      className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border border-border bg-surface"
-    >
+    <section role="region" aria-labelledby={headingId} className={cn(shell({ material }))}>
       <header
         id={headingId}
         className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted"

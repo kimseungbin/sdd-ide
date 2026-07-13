@@ -53,7 +53,8 @@ export function RightRail() {
         ))}
       </div>
       <div className="min-h-0 flex-1">
-        <Panel title={activeTab.title} padding="none">
+        {/* Glass: the rail is the navigation layer floating above content (Liquid Glass). */}
+        <Panel title={activeTab.title} material="glass" padding="none">
           <div className="h-full min-h-0 overflow-auto p-3">{activeTab.render()}</div>
         </Panel>
       </div>
