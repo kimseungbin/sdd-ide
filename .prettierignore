@@ -7,6 +7,9 @@ build
 # Generated / not ours to format
 package-lock.json
 
+# Local, git-ignored settings (per-machine; not tracked, so not ours to format)
+.claude/settings.local.json
+
 # Hand-authored prose with intentional layout (tables, wrapping) — formatted by review, not
 # Prettier: the design docs and the dogfooded backlog.
 **/*.md
