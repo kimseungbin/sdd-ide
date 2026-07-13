@@ -37,22 +37,26 @@ export function RightRail() {
   const activeTab = TABS.find((t) => t.key === active) ?? TABS[0]
 
   return (
-    <Panel
-      title={activeTab.title}
-      padding="none"
-      actions={TABS.map((tab) => (
-        <Button
-          key={tab.key}
-          variant={tab.key === active ? 'primary' : 'ghost'}
-          size="sm"
-          aria-pressed={tab.key === active}
-          onClick={() => select(tab.key)}
-        >
-          {tab.short}
-        </Button>
-      ))}
-    >
-      <div className="h-full min-h-0 overflow-auto p-3">{activeTab.render()}</div>
-    </Panel>
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      {/* Tab strip — its own row so the Panel title below keeps full width (no clipping). */}
+      <div className="flex shrink-0 gap-1">
+        {TABS.map((tab) => (
+          <Button
+            key={tab.key}
+            variant={tab.key === active ? 'primary' : 'ghost'}
+            size="sm"
+            aria-pressed={tab.key === active}
+            onClick={() => select(tab.key)}
+          >
+            {tab.short}
+          </Button>
+        ))}
+      </div>
+      <div className="min-h-0 flex-1">
+        <Panel title={activeTab.title} padding="none">
+          <div className="h-full min-h-0 overflow-auto p-3">{activeTab.render()}</div>
+        </Panel>
+      </div>
+    </div>
   )
 }
