@@ -2,63 +2,57 @@ import { useState, type ReactNode } from 'react'
 import { Button } from '../components/Button'
 import { Panel } from '../components/Panel'
 import { DirectoryPanel } from './panes/DirectoryPanel'
+import { SourceControlPanel } from './panes/SourceControlPanel'
 import { SpecPanel } from './panes/SpecPanel'
 
 /*
-  RightRail (BL-035) — the workspace's right rail: directory + spec stacked, sharing the rail.
-  Each section can be collapsed (header-only, the other fills the rail) and the two can be
-  swapped top↔bottom. Expanded sections split the rail height 1:1 (flex).
+  RightRail (BL-035, extended by the git panel) — a tabbed navigator: Directory / Source Control /
+  Spec, one visible at a time so each gets the full rail height (the Source Control tab needs room
+  for status + commit box + history). The active tab persists across sessions. Tabs live in the
+  Panel header; the active tab reads as `variant="primary"`, the rest as ghost.
 */
-type RailKey = 'dir' | 'spec'
+type RailKey = 'dir' | 'git' | 'spec'
 
-const SECTIONS: Record<RailKey, { title: string; render: () => ReactNode }> = {
-  dir: { title: 'Directory', render: () => <DirectoryPanel /> },
-  spec: { title: 'Spec', render: () => <SpecPanel /> },
+const TABS: { key: RailKey; title: string; short: string; render: () => ReactNode }[] = [
+  { key: 'dir', title: 'Directory', short: 'Files', render: () => <DirectoryPanel /> },
+  { key: 'git', title: 'Source Control', short: 'Git', render: () => <SourceControlPanel /> },
+  { key: 'spec', title: 'Spec', short: 'Spec', render: () => <SpecPanel /> },
+]
+
+const STORAGE_KEY = 'sdd-rail-tab'
+
+function initialTab(): RailKey {
+  const saved = localStorage.getItem(STORAGE_KEY)
+  return TABS.some((t) => t.key === saved) ? (saved as RailKey) : 'dir'
 }
 
 export function RightRail() {
-  const [order, setOrder] = useState<[RailKey, RailKey]>(['dir', 'spec'])
-  const [collapsed, setCollapsed] = useState<Record<RailKey, boolean>>({ dir: false, spec: false })
+  const [active, setActive] = useState<RailKey>(initialTab)
 
-  const swap = (): void => setOrder(([a, b]) => [b, a])
-  const toggle = (key: RailKey): void => setCollapsed((c) => ({ ...c, [key]: !c[key] }))
+  const select = (key: RailKey): void => {
+    setActive(key)
+    localStorage.setItem(STORAGE_KEY, key)
+  }
+
+  const activeTab = TABS.find((t) => t.key === active) ?? TABS[0]
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2">
-      {order.map((key) => {
-        const isCollapsed = collapsed[key]
-        const other: RailKey = key === 'dir' ? 'spec' : 'dir'
-        return (
-          <div key={key} className={isCollapsed ? 'shrink-0' : 'min-h-0 flex-1'}>
-            <Panel
-              title={SECTIONS[key].title}
-              collapsed={isCollapsed}
-              actions={
-                <>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`Swap ${SECTIONS[key].title} and ${SECTIONS[other].title}`}
-                    onClick={swap}
-                  >
-                    ⇅
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`${isCollapsed ? 'Expand' : 'Collapse'} ${SECTIONS[key].title}`}
-                    onClick={() => toggle(key)}
-                  >
-                    {isCollapsed ? '+' : '−'}
-                  </Button>
-                </>
-              }
-            >
-              {SECTIONS[key].render()}
-            </Panel>
-          </div>
-        )
-      })}
-    </div>
+    <Panel
+      title={activeTab.title}
+      padding="none"
+      actions={TABS.map((tab) => (
+        <Button
+          key={tab.key}
+          variant={tab.key === active ? 'primary' : 'ghost'}
+          size="sm"
+          aria-pressed={tab.key === active}
+          onClick={() => select(tab.key)}
+        >
+          {tab.short}
+        </Button>
+      ))}
+    >
+      <div className="h-full min-h-0 overflow-auto p-3">{activeTab.render()}</div>
+    </Panel>
   )
 }

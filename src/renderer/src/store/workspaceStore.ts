@@ -4,14 +4,17 @@
   a component. Distinct from the spec store (specStore.ts): this is *what document is open*, not
   spec data.
 
-  The document pane is unified: the open document is either a file (→ code editor) or a spec node
-  (→ spec editor). The directory tree opens files; the spec tree opens spec docs — one surface,
-  two navigators.
+  The document pane is unified: the open document is either a file (→ code editor), a spec node
+  (→ spec editor), or a diff (→ entity/line diff). The directory tree opens files; the spec tree
+  opens spec docs; the Source Control tab opens diffs — one surface, several navigators.
 */
 import type { NodeId } from '../../../engine'
 
 export type ActiveDocument =
-  { kind: 'file'; path: string } | { kind: 'spec'; nodeId: NodeId } | null
+  | { kind: 'file'; path: string }
+  | { kind: 'spec'; nodeId: NodeId }
+  | { kind: 'diff'; path: string }
+  | null
 
 let activeDocument: ActiveDocument = null
 const listeners = new Set<() => void>()
@@ -38,6 +41,11 @@ export const workspaceStore = {
   setActiveSpec(nodeId: NodeId): void {
     if (activeDocument?.kind === 'spec' && activeDocument.nodeId === nodeId) return
     activeDocument = { kind: 'spec', nodeId }
+    notify()
+  },
+  setActiveDiff(path: string): void {
+    if (activeDocument?.kind === 'diff' && activeDocument.path === path) return
+    activeDocument = { kind: 'diff', path }
     notify()
   },
 }

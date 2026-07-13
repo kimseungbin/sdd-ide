@@ -21,6 +21,14 @@
   --color-brand-fg: #ffffff;
   --color-ring: #4e83bd;
 
+  /* Diff / VCS change states (git panel + sem entity diff). Hues align with the editor palette
+     (--cm-*) so a change reads the same in the tree, a Badge, and the diff body. Subtle
+     backgrounds use these at low opacity (e.g. bg-added/15), matching the bg-brand/10 idiom. */
+  --color-added: #6a8759;
+  --color-removed: #bc3f3c;
+  --color-modified: #cc7832;
+  --color-renamed: #6897bb;
+
   --radius-md: 0.5rem;
 }
 
