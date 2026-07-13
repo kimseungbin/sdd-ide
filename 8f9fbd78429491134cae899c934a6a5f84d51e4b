@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "commit": "8f9fbd78429491134cae899c934a6a5f84d51e4b",
+  "node": "v26.5.0",
+  "electron": "43.0.0",
+  "runs": 5,
+  "bundle": {
+    "mainBytes": 35907,
+    "preloadBytes": 5126,
+    "rendererBytes": 2941115,
+    "rendererInitialBytes": 1027313,
+    "totalBytes": 2982148
+  },
+  "startup": {
+    "launchToWindowMsMedian": 330,
+    "firstPaintMsMedian": 172
+  },
+  "memory": {
+    "idleWorkingSetKbMedian": 569620
+  }
+}
