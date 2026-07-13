@@ -190,31 +190,43 @@ export function SourceControlPanel() {
 
   return (
     <div className="flex h-full flex-col gap-3">
-      {/* Branch header / switcher */}
-      {creatingBranch ? (
-        <Input
-          autoFocus
-          value={newBranch}
-          placeholder="new-branch-name"
-          onChange={(e) => setNewBranch(e.target.value)}
-          onSubmit={submitBranch}
-          onKeyDown={(e) => e.key === 'Escape' && setCreatingBranch(false)}
-        />
-      ) : (
-        <Menu
-          trigger={
-            <Button variant="ghost" size="sm">
-              ⎇ {branchLabel} ⌄
-            </Button>
-          }
-          items={branches.map((b) => ({
-            label: b.name,
-            selected: b.current,
-            onSelect: () => gitStore.checkout(b.name),
-          }))}
-          footerItem={{ label: '+ New branch…', onSelect: () => setCreatingBranch(true) }}
-        />
-      )}
+      {/* Branch header / switcher + manual refresh */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          {creatingBranch ? (
+            <Input
+              autoFocus
+              value={newBranch}
+              placeholder="new-branch-name"
+              onChange={(e) => setNewBranch(e.target.value)}
+              onSubmit={submitBranch}
+              onKeyDown={(e) => e.key === 'Escape' && setCreatingBranch(false)}
+            />
+          ) : (
+            <Menu
+              trigger={
+                <Button variant="ghost" size="sm">
+                  ⎇ {branchLabel} ⌄
+                </Button>
+              }
+              items={branches.map((b) => ({
+                label: b.name,
+                selected: b.current,
+                onSelect: () => gitStore.checkout(b.name),
+              }))}
+              footerItem={{ label: '+ New branch…', onSelect: () => setCreatingBranch(true) }}
+            />
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Refresh status"
+          onClick={() => gitStore.refresh()}
+        >
+          ↻
+        </Button>
+      </div>
 
       {/* Commit box */}
       <div className="flex flex-col gap-2">

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Badge, type BadgeProps } from '../../components/Badge'
 import { TreeItem } from '../../components/TreeItem'
+import { useGit } from '../../store/useGit'
 import type { SemChange, SemChangeType } from '../../../../shared/sem'
 
 // CodeMirror is heavy — reuse the code pane's split chunk for the drill-in slices.
@@ -106,10 +107,17 @@ function LineDiff({ text }: { text: string }) {
 export function DiffDocument({ path }: { path: string }) {
   const [state, setState] = useState<DiffState>({ mode: 'loading' })
   const filename = path.split('/').pop() ?? path
+  // Re-fetch when git state changes (stage/commit/checkout, window-focus refresh) so the open diff
+  // stays live — e.g. it flips to "No changes" once the file is committed. First fetch is on mount.
+  const { rev } = useGit()
+
+  // Show the loading state only when the *file* changes — a background rev refresh updates in place.
+  useEffect(() => {
+    setState({ mode: 'loading' })
+  }, [path])
 
   useEffect(() => {
     let cancelled = false
-    setState({ mode: 'loading' })
     window.sddIde.sem
       .diff()
       .then(async (diff) => {
@@ -132,7 +140,7 @@ export function DiffDocument({ path }: { path: string }) {
     return () => {
       cancelled = true
     }
-  }, [path])
+  }, [path, rev])
 
   const counts =
     state.mode === 'entities'

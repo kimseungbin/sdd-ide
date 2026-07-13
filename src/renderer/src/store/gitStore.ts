@@ -3,8 +3,10 @@
   client that caches the working-tree status, branches, and log so panes stay projections (Rule 6).
 
   Git has no main→renderer change events, so state is pull-based: refresh() runs on mount of the
-  Source Control tab and after every mutation (stage/commit/checkout/…). Mutations funnel through
-  run(), which flips `busy`, surfaces errors honestly, and re-reads status on success.
+  Source Control tab, after every mutation (stage/commit/checkout/…), and whenever the window
+  regains focus (catches external edits / terminal git). Mutations funnel through run(), which
+  flips `busy`, surfaces errors honestly, and re-reads status on success. `rev` bumps on every
+  data refresh so git-derived views (the open diff) can re-fetch off a single signal.
 */
 import type { GitBranch, GitCommit, GitStatus } from '../../../shared/git'
 
@@ -16,6 +18,8 @@ export interface GitState {
   log: GitCommit[]
   busy: boolean
   error: string | null
+  /** Bumped on each successful data refresh — a cheap freshness signal for dependent views. */
+  rev: number
 }
 
 let state: GitState = {
@@ -25,6 +29,7 @@ let state: GitState = {
   log: [],
   busy: false,
   error: null,
+  rev: 0,
 }
 const listeners = new Set<() => void>()
 
@@ -36,7 +41,7 @@ function set(patch: Partial<GitState>): void {
 async function refresh(): Promise<void> {
   const isRepo = await window.sddIde.git.isRepo()
   if (!isRepo) {
-    set({ isRepo: false, status: null, branches: [], log: [] })
+    set({ isRepo: false, status: null, branches: [], log: [], rev: state.rev + 1 })
     return
   }
   const [status, branches, log] = await Promise.all([
@@ -44,7 +49,7 @@ async function refresh(): Promise<void> {
     window.sddIde.git.branches(),
     window.sddIde.git.log(30),
   ])
-  set({ isRepo: true, status, branches, log })
+  set({ isRepo: true, status, branches, log, rev: state.rev + 1 })
 }
 
 /** Run a mutation, then re-read status. Errors are captured on the state, never thrown at the UI. */
@@ -92,3 +97,10 @@ export const gitStore = {
     void run(() => window.sddIde.git.createBranch(name))
   },
 }
+
+// Keep git-derived views fresh when the window regains focus (external edits, terminal git, a
+// branch switch in another tool). Only meaningful once a git view has been shown (this module is
+// imported lazily by the Source Control tab), so there is no cost until git is first used.
+window.addEventListener('focus', () => {
+  if (state.isRepo !== false) void refresh()
+})
