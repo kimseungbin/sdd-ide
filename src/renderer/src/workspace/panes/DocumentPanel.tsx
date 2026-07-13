@@ -1,4 +1,5 @@
 import { useActiveDocument } from '../../store/useActiveFile'
+import { DiffDocument } from './DiffDocument'
 import { FileDocument } from './FileDocument'
 import { SpecDocument } from './SpecDocument'
 
@@ -25,14 +26,5 @@ export function DocumentPanel() {
 
   if (doc.kind === 'file') return <FileDocument path={doc.path} />
   if (doc.kind === 'spec') return <SpecDocument />
-  // kind === 'diff' — the entity/line diff renderer lands in P3; placeholder proves the wiring.
-  return (
-    <div className="flex h-full items-center justify-center p-3 text-center text-muted">
-      <p className="text-sm">
-        Diff: <span className="text-fg">{doc.path}</span>
-        <br />
-        <span className="text-xs">Entity diff renders here (P3)</span>
-      </p>
-    </div>
-  )
+  return <DiffDocument path={doc.path} />
 }

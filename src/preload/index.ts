@@ -67,6 +67,9 @@ const api: SddIdeApi = {
     log: (limit) => ipcRenderer.invoke(IPC.gitLog, limit),
     diff: (path) => ipcRenderer.invoke(IPC.gitDiff, path),
   },
+  sem: {
+    diff: () => ipcRenderer.invoke(IPC.semDiff),
+  },
   menu: {
     onOpenSettings: (listener) => {
       const handler = (): void => listener()

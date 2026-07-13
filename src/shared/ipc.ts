@@ -18,6 +18,7 @@ import type {
   SecureStorageStatus,
 } from './agent'
 import type { GitBranch, GitCommit, GitStatus } from './git'
+import type { SemDiff } from './sem'
 
 export interface DirEntry {
   name: string
@@ -91,6 +92,12 @@ export interface SddIdeApi {
     /** Unified `git diff HEAD` for one file — the line-diff fallback for non-entity files. */
     diff(path: string): Promise<string>
   }
+  // Code-side entity diff (`sem diff --format json`), the code mirror of the spec's structural
+  // diff: which functions/classes/methods changed, working tree vs HEAD. Shelled out from main.
+  sem: {
+    /** Entity-level diff of the whole working tree; the renderer filters by file path. */
+    diff(): Promise<SemDiff>
+  }
   // Native app menu → renderer signals (main owns the menu; the renderer reacts).
   menu: {
     /** The Settings… item (or Cmd+,) was invoked — open the settings surface. */
@@ -145,4 +152,5 @@ export const IPC = {
   gitCreateBranch: 'git:createBranch',
   gitLog: 'git:log',
   gitDiff: 'git:diff',
+  semDiff: 'sem:diff',
 } as const
