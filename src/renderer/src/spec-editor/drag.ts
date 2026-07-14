@@ -13,8 +13,16 @@ import { dropMove } from './structural'
 interface Target {
   id: NodeId
   dom: HTMLElement
-  side: 'before' | 'after'
+  side: 'before' | 'after' | 'child'
 }
+
+/*
+  Drag-down-and-right to nest (Notion-style, BL-031): in a target's lower half, a cursor pushed
+  right past this many px from the block's left edge nests the dragged block as the target's child
+  instead of dropping it as a following sibling. The threshold clears the gutter (grip + chevron,
+  ~2.1rem) so an ordinary vertical drag never trips it.
+*/
+const NEST_INDENT_PX = 40
 interface Active {
   draggedId: NodeId
   editor: Editor
@@ -30,7 +38,7 @@ interface Active {
 let active: Active | null = null
 
 function clearIndicator(): void {
-  active?.target?.dom.classList.remove('drop-before', 'drop-after')
+  active?.target?.dom.classList.remove('drop-before', 'drop-after', 'drop-child')
 }
 
 /** The top-level specBlock under the given viewport point, if any. */
@@ -58,8 +66,12 @@ function onMove(event: PointerEvent): void {
     return
   }
   const rect = hit.dom.getBoundingClientRect()
-  const side: 'before' | 'after' = event.clientY < rect.top + rect.height / 2 ? 'before' : 'after'
-  hit.dom.classList.add(side === 'before' ? 'drop-before' : 'drop-after')
+  // Top half → sibling before. Lower half → sibling after, unless the cursor is pushed right past
+  // the nest threshold, which nests the block under the target instead (drag-down-and-right).
+  let side: 'before' | 'after' | 'child'
+  if (event.clientY < rect.top + rect.height / 2) side = 'before'
+  else side = event.clientX - rect.left > NEST_INDENT_PX ? 'child' : 'after'
+  hit.dom.classList.add(`drop-${side}`)
   active.target = { id: hit.id, dom: hit.dom, side }
 }
 

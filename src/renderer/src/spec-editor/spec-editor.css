@@ -15,11 +15,12 @@
 }
 
 /* Per-block padding + Notion-like hover affordance. The left padding is an in-box gutter that
-   holds the drag grip, so hovering the block keeps the grip reachable (and it can't be clipped). */
+   holds the drag grip (left 0) and the collapse chevron (left 1rem), so hovering the block keeps
+   both reachable (and they can't be clipped). */
 .spec-editor .spec-block {
   position: relative;
   margin: 0.1rem 0;
-  padding: 0.1rem 0.35rem 0.1rem 1.5rem;
+  padding: 0.1rem 0.35rem 0.1rem 2.1rem;
   border-radius: var(--radius-md);
 }
 .spec-editor .spec-block:hover {
@@ -42,12 +43,28 @@
   color: var(--color-fg);
 }
 
-/* Drop indicator while dragging a block to reorder. */
+/* Collapse/expand chevron — sits in the gutter beside the grip; persistent for parent blocks
+   (unlike the hover-only grip) so the collapsed state is always legible. */
+.spec-editor .spec-toggle {
+  left: 1rem;
+  color: var(--color-muted);
+  transition: color 120ms;
+}
+.spec-editor .spec-toggle:hover {
+  color: var(--color-fg);
+}
+
+/* Drop indicators while dragging: a line before/after for a sibling reorder, or a ring around the
+   target for the drag-down-and-right nest (the block becomes the dragged node's new parent). */
 .spec-editor .spec-block.drop-before {
   box-shadow: inset 0 2px 0 0 var(--color-brand);
 }
 .spec-editor .spec-block.drop-after {
   box-shadow: inset 0 -2px 0 0 var(--color-brand);
+}
+.spec-editor .spec-block.drop-child {
+  box-shadow: inset 0 0 0 2px var(--color-brand);
+  background: color-mix(in srgb, var(--color-brand) 10%, transparent);
 }
 
 /* The source block is dimmed while its ghost is dragged (Notion-style pick-up). */
@@ -73,7 +90,8 @@
   border-radius: var(--radius-md);
   box-shadow: 0 6px 16px rgb(0 0 0 / 0.35);
 }
-.spec-drag-ghost .spec-grip {
+.spec-drag-ghost .spec-grip,
+.spec-drag-ghost .spec-toggle {
   display: none;
 }
 

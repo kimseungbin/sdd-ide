@@ -25,6 +25,18 @@ describe('projection: snapshotToBlocks', () => {
     ])
     expect(blocks.find((b) => b.nodeId === ids.task)?.status).toBe('todo')
     expect(blocks.find((b) => b.nodeId === ids.dd)?.state).toBe('open')
+    // spec + req have children; task + dd are leaves.
+    expect(blocks.find((b) => b.nodeId === ids.spec)?.hasChildren).toBe(true)
+    expect(blocks.find((b) => b.nodeId === ids.task)?.hasChildren).toBe(false)
+  })
+
+  it('omits a collapsed node subtree but still emits the node marked collapsed', () => {
+    const { engine, ids } = seeded()
+    const blocks = snapshotToBlocks(engine.toSnapshot(), new Set([ids.req]))
+
+    // req is present (collapsed); its child task is gone; siblings/others remain.
+    expect(blocks.map((b) => b.nodeId)).toEqual([ids.spec, ids.req, ids.dd])
+    expect(blocks.find((b) => b.nodeId === ids.req)?.collapsed).toBe(true)
   })
 })
 
@@ -62,6 +74,12 @@ describe('projection: structuralSignature', () => {
 
     engine.updateNode(ids.dd, { state: 'resolved' })
     expect(structuralSignature(engine.toSnapshot())).not.toBe(before) // state is
+  })
+
+  it('changes when a node is collapsed (so the editor re-projects on toggle)', () => {
+    const { engine, ids } = seeded()
+    const snap = engine.toSnapshot()
+    expect(structuralSignature(snap, new Set([ids.req]))).not.toBe(structuralSignature(snap))
   })
 })
 

@@ -18,16 +18,28 @@ export interface SpecBlock {
   title: string
   status?: TaskStatus
   state?: DecisionState
+  /** Whether the node has children — drives the collapse/expand chevron (BL-031). */
+  hasChildren: boolean
+  /** Whether this node's subtree is currently collapsed (children omitted below). */
+  collapsed: boolean
 }
 
-/** Depth-first flatten of the containment tree into an ordered block list. */
-export function snapshotToBlocks(snapshot: SpecSnapshot): SpecBlock[] {
+/**
+ * Depth-first flatten of the containment tree into an ordered block list. A node in `collapsed`
+ * still emits its own block (marked collapsed), but its subtree is omitted — that's progressive
+ * disclosure in the editor (BL-031), the counterpart to the read-only spec pane's expand/collapse.
+ */
+export function snapshotToBlocks(
+  snapshot: SpecSnapshot,
+  collapsed: ReadonlySet<NodeId> = new Set(),
+): SpecBlock[] {
   const byId = new Map(snapshot.nodes.map((n) => [n.id, n]))
   const out: SpecBlock[] = []
   const walk = (ids: NodeId[], depth: number): void => {
     for (const id of ids) {
       const node = byId.get(id)
       if (!node) continue
+      const isCollapsed = collapsed.has(id)
       out.push({
         nodeId: node.id,
         type: node.type,
@@ -35,8 +47,10 @@ export function snapshotToBlocks(snapshot: SpecSnapshot): SpecBlock[] {
         title: node.title,
         status: node.type === 'task' ? node.status : undefined,
         state: node.type === 'deferred-decision' ? node.state : undefined,
+        hasChildren: node.children.length > 0,
+        collapsed: isCollapsed,
       })
-      walk(node.children, depth + 1)
+      if (!isCollapsed) walk(node.children, depth + 1)
     }
   }
   walk(snapshot.rootIds, 0)
@@ -53,14 +67,19 @@ function blockToNode(block: SpecBlock): Record<string, unknown> {
       depth: block.depth,
       status: block.type === 'task' ? (block.status ?? 'todo') : null,
       state: block.type === 'deferred-decision' ? (block.state ?? 'open') : null,
+      hasChildren: block.hasChildren ? 'true' : null,
+      collapsed: block.collapsed ? 'true' : null,
     },
     content: block.title ? [{ type: 'text', text: block.title }] : [],
   }
 }
 
-/** Snapshot → a Tiptap `doc` JSON node. */
-export function snapshotToDoc(snapshot: SpecSnapshot): Record<string, unknown> {
-  const blocks = snapshotToBlocks(snapshot)
+/** Snapshot → a Tiptap `doc` JSON node. Collapsed subtrees are omitted (BL-031). */
+export function snapshotToDoc(
+  snapshot: SpecSnapshot,
+  collapsed: ReadonlySet<NodeId> = new Set(),
+): Record<string, unknown> {
+  const blocks = snapshotToBlocks(snapshot, collapsed)
   const content = blocks.map(blockToNode)
   // A ProseMirror doc must be non-empty; fall back to an empty paragraph.
   return { type: 'doc', content: content.length > 0 ? content : [{ type: 'paragraph' }] }
@@ -72,9 +91,14 @@ export function snapshotToDoc(snapshot: SpecSnapshot): Record<string, unknown> {
   never on a title keystroke. That's what keeps the caret stable and IME composition intact while
   typing: a title edit round-trips to the store but does not trigger a doc rebuild (echo).
 */
-export function structuralSignature(snapshot: SpecSnapshot | null): string {
+export function structuralSignature(
+  snapshot: SpecSnapshot | null,
+  collapsed: ReadonlySet<NodeId> = new Set(),
+): string {
   if (!snapshot) return ''
-  return snapshotToBlocks(snapshot)
-    .map((b) => `${b.nodeId}:${b.type}:${b.depth}:${b.status ?? ''}:${b.state ?? ''}`)
+  return snapshotToBlocks(snapshot, collapsed)
+    .map(
+      (b) => `${b.nodeId}:${b.type}:${b.depth}:${b.status ?? ''}:${b.state ?? ''}:${b.collapsed}`,
+    )
     .join('|')
 }

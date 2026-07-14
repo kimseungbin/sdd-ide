@@ -8,11 +8,22 @@ import {
 } from '@tiptap/react'
 import { StarterKit } from '@tiptap/starter-kit'
 import { Button } from '../components/Button'
-import type { DecisionState, NodeType, TaskStatus } from '../../../engine'
+import type { DecisionState, NodeId, NodeType, TaskStatus } from '../../../engine'
 import type { SpecBinding } from './binding'
 import { createSlashCommand } from './slash-command'
 import { startBlockDrag } from './drag'
 import './spec-editor.css'
+
+/*
+  Progressive disclosure (BL-031): collapse/expand is editor-local *view* state (a set of
+  collapsed node ids), not store data — the same shape the read-only spec pane uses. The NodeView
+  reads/toggles it through this controller; SpecEditor owns the set and re-projects the doc on
+  toggle (a collapsed subtree is omitted from the projection).
+*/
+export interface SpecDisclosure {
+  isCollapsed(id: NodeId): boolean
+  toggle(id: NodeId): void
+}
 
 /*
   BL-030/031/032 — the Tiptap schema for the spec editor. Every store node projects to ONE uniform
@@ -105,11 +116,14 @@ function blockInner(
 
 function SpecBlockView({ node, editor, extension }: NodeViewProps) {
   const binding = extension.options.binding as SpecBinding
-  const nodeId = node.attrs.nodeId as string
+  const disclosure = extension.options.disclosure as SpecDisclosure
+  const nodeId = node.attrs.nodeId as NodeId
   const specType = node.attrs.specType as NodeType
   const depth = (node.attrs.depth as number | null) ?? 0
   const status = (node.attrs.status as TaskStatus | null) ?? 'todo'
   const state = (node.attrs.state as DecisionState | null) ?? 'open'
+  const hasChildren = node.attrs.hasChildren === 'true'
+  const collapsed = node.attrs.collapsed === 'true'
 
   return (
     <NodeViewWrapper data-node-id={nodeId} data-depth={depth} className="spec-block group relative">
@@ -129,12 +143,26 @@ function SpecBlockView({ node, editor, extension }: NodeViewProps) {
       >
         ⋮
       </span>
+      {hasChildren && (
+        <span
+          contentEditable={false}
+          role="button"
+          aria-label={collapsed ? 'Expand' : 'Collapse'}
+          aria-expanded={!collapsed}
+          // preventDefault keeps the caret/selection put; the toggle re-projects the doc.
+          onPointerDown={(event) => event.preventDefault()}
+          onClick={() => disclosure.toggle(nodeId)}
+          className="spec-toggle absolute top-0 flex h-full w-4 cursor-pointer select-none items-center justify-center text-xs leading-none"
+        >
+          {collapsed ? '▸' : '▾'}
+        </span>
+      )}
       {blockInner(specType, status, state, nodeId, binding)}
     </NodeViewWrapper>
   )
 }
 
-export function createSpecExtensions(binding: SpecBinding) {
+export function createSpecExtensions(binding: SpecBinding, disclosure: SpecDisclosure) {
   const attr = (name: string, dataName: string) => ({
     default: null,
     renderHTML: (attrs: Record<string, unknown>) =>
@@ -147,13 +175,15 @@ export function createSpecExtensions(binding: SpecBinding) {
     group: 'block',
     content: 'inline*',
     defining: true,
-    addOptions: () => ({ binding }),
+    addOptions: () => ({ binding, disclosure }),
     addAttributes: () => ({
       nodeId: attr('nodeId', 'data-node-id'),
       specType: attr('specType', 'data-spec-type'),
       depth: attr('depth', 'data-depth'),
       status: attr('status', 'data-status'),
       state: attr('state', 'data-state'),
+      hasChildren: attr('hasChildren', 'data-has-children'),
+      collapsed: attr('collapsed', 'data-collapsed'),
     }),
     parseHTML: () => [{ tag: 'div[data-spec-block]' }],
     renderHTML: ({ HTMLAttributes }) => [

@@ -48,9 +48,16 @@ describe('structural moves', () => {
     expect(dropMove(snap, ids.design, ids.req, 'after')).toEqual({ parentId: ids.spec, index: 1 })
   })
 
+  it('dropMove nests as the target first child on a child drop (drag-down-and-right)', () => {
+    const { snap, ids } = seeded()
+    // Drag design into req: becomes req's first child (ahead of task).
+    expect(dropMove(snap, ids.design, ids.req, 'child')).toEqual({ parentId: ids.req, index: 0 })
+  })
+
   it('dropMove rejects dropping a block onto itself or into its own subtree', () => {
     const { snap, ids } = seeded()
     expect(dropMove(snap, ids.req, ids.req, 'before')).toBeNull()
     expect(dropMove(snap, ids.req, ids.task, 'after')).toBeNull() // task is inside req
+    expect(dropMove(snap, ids.req, ids.task, 'child')).toBeNull() // can't nest under own descendant
   })
 })

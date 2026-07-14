@@ -86,7 +86,7 @@ _Adopt an editor via adapter; its doc model is a projection of the store._
 | [BL-038](./items/BL-038-spec-task-projection-panel.md) | Spec/task projection panel (read-only) | feature | high | done | D1, D7, D30 |
 | [BL-039](./items/BL-039-agent-surface.md) | Agent surface (chat skeleton) | feature | high | done | D7, D8 |
 | [BL-030](./items/BL-030-editor-adapter.md) | Editor adapter: doc model as store projection | feature | high | done | D18, D2 |
-| [BL-031](./items/BL-031-containment-editing-ux.md) | Containment editing UX (nesting, drag-drop) | feature | medium | in-progress | D5 |
+| [BL-031](./items/BL-031-containment-editing-ux.md) | Containment editing UX (nesting, drag-drop) | feature | medium | done | D5 |
 | [BL-032](./items/BL-032-custom-block-types.md) | Custom block types incl. deferred-decision node | feature | medium | in-progress | D6, D17 |
 
 ### M4 — Context management (the product core)

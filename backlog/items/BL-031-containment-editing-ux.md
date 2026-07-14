@@ -1,7 +1,7 @@
 ---
 id: BL-031
 title: Containment editing UX (nesting, drag-drop)
-status: in-progress
+status: done
 type: feature
 priority: medium
 milestone: M3
@@ -27,9 +27,12 @@ store is a single external DB, not per-spec files.)
       Tab / Shift-Tab nest / outdent; drag a block's grip to reorder (`schema.tsx`, `structural.ts`).
 - [x] Drag-drop moves subtrees; all moves go through the mutation API ([[BL-011]]) — `moveNode`
       moves the node with its subtree; `dropMove` computes the target, no ProseMirror surgery.
-- [ ] Progressive disclosure (collapse/expand detail) — present in the read-only spec tree pane
-      ([[BL-038]]); not yet in the editor. Also: drag currently reorders among siblings; drag-to-
-      *nest* (cross-depth) is still keyboard-only (Tab).
+- [x] Progressive disclosure (collapse/expand detail) — a ▾/▸ chevron on parent blocks in the
+      editor collapses/expands the subtree; collapse is editor-local *view* state (a `Set<NodeId>`
+      in `SpecEditor.tsx`), mirroring the read-only spec pane ([[BL-038]]). A collapsed subtree is
+      omitted from the projection (`snapshotToBlocks`/`structuralSignature` take the collapsed set).
+      Also: drag now nests cross-depth — drag a block down-and-right past the gutter to drop it as a
+      child (`dropMove`'s `'child'` side, `drag.ts` horizontal-threshold), not just reorder siblings.
 
 ## Notes / open questions
 

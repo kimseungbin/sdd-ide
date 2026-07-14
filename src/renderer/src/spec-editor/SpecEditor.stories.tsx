@@ -4,10 +4,15 @@ import { createSeededEngineBinding, type SpecBinding } from './binding'
 import { SpecEditor } from './SpecEditor'
 
 /*
-  BL-030 story — the editor as a projection of a real (in-renderer) engine. Run `npm run ladle`.
+  BL-030/031 story — the editor as a projection of a real (in-renderer) engine. Run `npm run ladle`.
   Type into a title: it round-trips through the validated mutation path into the readout below.
   Type 한글 to confirm IME composition holds in the real integration (AC #4). Toggle the
   deferred-decision block: its state flips through the same path and the doc re-projects.
+
+  Containment editing (BL-031): hover a parent block for the ▾ chevron — click to collapse/expand
+  its subtree (view-only; the store is untouched). Grab a block's ⋮ grip to drag: drop above/below
+  reorders among siblings; drag down-and-right (past the gutter) nests it as a child. Every move
+  issues a validated moveNode, so the readout reflects the new containment.
 */
 export default { title: 'Spec editor (BL-030)' }
 

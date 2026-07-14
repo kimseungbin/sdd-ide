@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
 import type { Editor } from '@tiptap/core'
 import type { NodeId, NodeType, SpecSnapshot } from '../../../engine'
-import { createSpecExtensions } from './schema'
+import { createSpecExtensions, type SpecDisclosure } from './schema'
 import { snapshotToDoc, structuralSignature } from './projection'
 import { indentTarget, outdentTarget, previousBlockId, siblingAfter } from './structural'
 import type { SpecBinding } from './binding'
@@ -36,7 +36,22 @@ function focusBlock(editor: Editor, nodeId: NodeId): void {
 }
 
 export function SpecEditor({ binding }: { binding: SpecBinding }) {
-  const extensions = useMemo(() => createSpecExtensions(binding), [binding])
+  // Collapse/expand is editor-local view state (BL-031), owned here and read/toggled by the
+  // block NodeView through a stable disclosure controller. Toggling re-projects the doc.
+  const collapsed = useRef<Set<NodeId>>(new Set())
+  const reproject = useRef<() => void>(() => {})
+  const disclosure = useMemo<SpecDisclosure>(
+    () => ({
+      isCollapsed: (id) => collapsed.current.has(id),
+      toggle: (id) => {
+        if (collapsed.current.has(id)) collapsed.current.delete(id)
+        else collapsed.current.add(id)
+        reproject.current()
+      },
+    }),
+    [],
+  )
+  const extensions = useMemo(() => createSpecExtensions(binding, disclosure), [binding, disclosure])
   const mountSnap = useMemo(() => binding.getSnapshot(), [binding])
 
   // The signature the editor's current content represents; the store titles we last knew (to
@@ -57,7 +72,7 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
 
   const editor = useEditor({
     extensions,
-    content: snapshotToDoc(mountSnap ?? EMPTY_SNAPSHOT),
+    content: snapshotToDoc(mountSnap ?? EMPTY_SNAPSHOT, collapsed.current),
     editorProps: {
       // Structural keys operate on the STORE (D2), not the ProseMirror doc — the reprojection
       // reflects the move and the caret follows via focusAfterSync / the focus-new heuristic.
@@ -150,10 +165,12 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
       const nextIds = new Set<NodeId>(snap?.nodes.map((n) => n.id))
       const added = [...nextIds].filter((id) => !knownIds.current.has(id))
       knownIds.current = nextIds
-      const sig = structuralSignature(snap)
+      const sig = structuralSignature(snap, collapsed.current)
       if (sig !== sigRef.current) {
         sigRef.current = sig
-        editor?.commands.setContent(snapshotToDoc(snap ?? EMPTY_SNAPSHOT), { emitUpdate: false })
+        editor?.commands.setContent(snapshotToDoc(snap ?? EMPTY_SNAPSHOT, collapsed.current), {
+          emitUpdate: false,
+        })
         if (editor) {
           // A move/delete names its target; else a single freshly-created node gets the caret.
           const explicit = focusAfterSync.current
@@ -162,6 +179,16 @@ export function SpecEditor({ binding }: { binding: SpecBinding }) {
           else if (added.length === 1) focusBlock(editor, added[0])
         }
       }
+    }
+
+    // A collapse/expand toggle re-projects without a store change (no caret follow needed).
+    reproject.current = (): void => {
+      if (!editor) return
+      const snap = binding.getSnapshot()
+      sigRef.current = structuralSignature(snap, collapsed.current)
+      editor.commands.setContent(snapshotToDoc(snap ?? EMPTY_SNAPSHOT, collapsed.current), {
+        emitUpdate: false,
+      })
     }
 
     const unsub = binding.subscribe(sync)

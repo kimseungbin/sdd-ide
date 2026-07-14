@@ -65,20 +65,23 @@ function isDescendant(snapshot: SpecSnapshot, ancestorId: NodeId, nodeId: NodeId
 }
 
 /**
- * Drop `draggedId` before/after `targetId` among the target's siblings. Index is computed against
- * the sibling list with the dragged node removed, so it's the post-detach position moveNode wants.
+ * Resolve a pointer drop of `draggedId` relative to `targetId`:
+ *  - `before`/`after` → reorder among the target's siblings (index computed against the sibling
+ *    list with the dragged node removed, so it's the post-detach position moveNode wants);
+ *  - `child` → nest as the target's first child (the drag-down-and-right gesture, BL-031).
  * Null when the drop is a no-op or illegal (onto itself or into its own subtree).
  */
 export function dropMove(
   snapshot: SpecSnapshot,
   draggedId: NodeId,
   targetId: NodeId,
-  side: 'before' | 'after',
+  side: 'before' | 'after' | 'child',
 ): MoveTarget | null {
   if (draggedId === targetId) return null
   if (isDescendant(snapshot, draggedId, targetId)) return null
   const target = snapshot.nodes.find((n) => n.id === targetId)
   if (!target) return null
+  if (side === 'child') return { parentId: targetId, index: 0 }
   const siblings = siblingsOf(snapshot, target.parentId).filter((id) => id !== draggedId)
   const ti = siblings.indexOf(targetId)
   return { parentId: target.parentId, index: side === 'before' ? ti : ti + 1 }
