@@ -123,6 +123,7 @@ _Close the loop with Git-native review; the coherence reviewer is the safety net
 | [BL-062](./items/BL-062-traceability-pr-to-nodes.md) | Traceability: PR/commit ↔ task nodes | feature | high | backlog | D13 |
 | [BL-063](./items/BL-063-agent-spec-updates-from-comments.md) | Agent proposes spec updates from PR comments | feature | medium | backlog | D13 |
 | [BL-064](./items/BL-064-task-completion-merge-gate.md) | Task-completion merge gate (spec drives CI) | feature | medium | backlog | D13 |
+| [BL-065](./items/BL-065-cross-worktree-session-changeset.md) | Session-scoped cross-worktree changeset view | feature | medium | backlog | D7, D13 |
 
 ---
 
